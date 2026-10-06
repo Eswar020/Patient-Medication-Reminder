@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Weekly Report - MedTrack</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <h2>💊 MedTrack</h2>
+
+    <nav>
+
+        <a href="/">Dashboard</a>
+
+        <a href="/patients">Patients</a>
+
+        <a href="/prescriptions">Prescriptions</a>
+
+        <a href="/schedule">Schedule</a>
+
+        <a href="/medication-log">Medication Log</a>
+
+        <a href="/reports">Reports</a>
+
+    </nav>
+
+</header>
+
+
+<main>
+
+    <h1>Weekly Adherence Report</h1>
+
+    <p>
+        Medication adherence summary for the last 7 days.
+    </p>
+
+
+    {% if reports %}
+
+
+        {% for report in reports %}
+
+
+        <div class="report-card">
+
+
+            <h2>
+                👤 {{ report["patient_name"] }}
+            </h2>
+
+
+            <div class="adherence-score">
+
+                {{ report["adherence"] }}%
+
+            </div>
+
+
+            <p class="adherence-label">
+                Medication Adherence
+            </p>
+
+
+            <div class="report-stats">
+
+
+                <div class="report-stat">
+
+                    <h3>
+                        {{ report["total_doses"] }}
+                    </h3>
+
+                    <p>
+                        Total Doses
+                    </p>
+
+                </div>
+
+
+                <div class="report-stat">
+
+                    <h3>
+                        {{ report["taken_doses"] }}
+                    </h3>
+
+                    <p>
+                        Taken
+                    </p>
+
+                </div>
+
+
+                <div class="report-stat">
+
+                    <h3>
+                        {{ report["missed_doses"] }}
+                    </h3>
+
+                    <p>
+                        Missed
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="progress-container">
+                <div class="progress-bar"
+                    style="--progress-width: {{ report.adherence }}%;">
+                </div>
+            </div>
+
+
+        </div>
+
+
+        {% endfor %}
+
+
+    {% else %}
+
+
+        <div class="report-card">
+
+            <h3>
+                No adherence data available.
+            </h3>
+
+            <p>
+                Mark medication doses as Taken or Missed
+                to generate a weekly report.
+            </p>
+
+        </div>
+
+
+    {% endif %}
+
+
+</main>
+
+
+</body>
+
+</html>

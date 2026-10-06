@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MedTrack</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <h2>💊 MedTrack</h2>
+
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/patients">Patients</a>
+            <a href="/prescriptions">Prescriptions</a>
+            <a href="/schedule">Schedule</a>
+            <a href="/medication-log">Medication Log</a>
+            <a href="/reports">Reports</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <h1>Patient Medication Reminder</h1>
+
+        <p>
+            Manage prescriptions, medication reminders,
+            adherence logs and weekly reports.
+        </p>
+
+        <section class="cards">
+
+            <div class="card">
+                <h3>Medicines</h3>
+                <h2>0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Today's Doses</h3>
+                <h2>0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Taken</h3>
+                <h2>0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Missed</h3>
+                <h2>0</h2>
+            </div>
+
+        </section>
+
+        <button>Add Prescription</button>
+
+    </main>
+
+</body>
+
+</html>

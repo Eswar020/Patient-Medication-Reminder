@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Prescriptions - MedTrack</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+<header>
+
+    <h2>💊 MedTrack</h2>
+
+    <nav>
+
+        <a href="/">Dashboard</a>
+
+        <a href="/patients">Patients</a>
+
+        <a href="/prescriptions">Prescriptions</a>
+
+        <a href="/schedule">Schedule</a>
+
+        <a href="/medication-log">Medication Log</a>
+
+        <a href="/reports">Reports</a>
+
+    </nav>
+
+</header>
+
+
+<main>
+
+    <h1>Prescriptions</h1>
+
+    <p>
+        Add and manage patient medication prescriptions.
+    </p>
+
+
+    <div class="form-card">
+
+        <h2>Add Prescription</h2>
+
+
+        {% if patients %}
+
+        <form action="/prescriptions/add" method="POST">
+
+
+            <label>Patient</label>
+
+            <select name="patient_id" required>
+
+                <option value="">
+                    Select Patient
+                </option>
+
+                {% for patient in patients %}
+
+                <option value="{{ patient['patient_id'] }}">
+
+                    {{ patient["name"] }}
+                    -
+                    P{{ "%03d"|format(patient["patient_id"]) }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+
+            <label>Medicine Name</label>
+
+            <input
+                type="text"
+                name="medicine_name"
+                placeholder="Example: Dolo 650"
+                required
+            >
+
+
+            <label>Dosage</label>
+
+            <input
+                type="text"
+                name="dosage"
+                placeholder="Example: 500mg"
+                required
+            >
+
+
+            <label>Frequency</label>
+
+            <select name="frequency" required>
+
+                <option value="">
+                    Select Frequency
+                </option>
+
+                <option value="once_daily">
+                    Once Daily
+                </option>
+
+                <option value="twice_daily">
+                    Twice Daily
+                </option>
+
+                <option value="every_8_hours">
+                    Every 8 Hours
+                </option>
+
+            </select>
+
+
+            <label>Start Date</label>
+
+            <input
+                type="date"
+                name="start_date"
+                required
+            >
+
+
+            <label>End Date</label>
+
+            <input
+                type="date"
+                name="end_date"
+                required
+            >
+
+
+            <label>Starting Time</label>
+
+            <input
+                type="time"
+                name="start_time"
+                required
+            >
+
+
+            <button type="submit">
+                Save Prescription
+            </button>
+
+
+        </form>
+
+
+        {% else %}
+
+        <p>
+            You need to add a patient before creating
+            a prescription.
+        </p>
+
+        <a href="/patients">
+            Add Patient
+        </a>
+
+        {% endif %}
+
+    </div>
+
+
+    <h2>Prescription List</h2>
+
+
+    <div class="patient-list">
+
+
+        {% if prescriptions %}
+
+
+            {% for prescription in prescriptions %}
+
+
+            <div class="patient-card">
+
+                <h3>
+                    💊 {{ prescription["medicine_name"] }}
+                </h3>
+
+
+                <p>
+                    Patient:
+                    {{ prescription["patient_name"] }}
+                </p>
+
+
+                <p>
+                    Dosage:
+                    {{ prescription["dosage"] }}
+                </p>
+
+
+                <p>
+                    Frequency:
+                    {{ prescription["frequency"]
+                        .replace("_", " ")
+                        .title() }}
+                </p>
+
+
+                <p>
+                    Start:
+                    {{ prescription["start_date"] }}
+                </p>
+
+
+                <p>
+                    End:
+                    {{ prescription["end_date"] }}
+                </p>
+
+
+                <p>
+                    Starting Time:
+                    {{ prescription["start_time"] }}
+                </p>
+
+
+            </div>
+
+
+            {% endfor %}
+
+
+        {% else %}
+
+
+            <p>
+                No prescriptions have been added yet.
+            </p>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+</main>
+
+</body>
+
+</html>

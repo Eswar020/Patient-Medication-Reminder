@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Patients - MedTrack</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<header>
+
+    <h2>💊 MedTrack</h2>
+
+    <nav>
+
+        <a href="/">Dashboard</a>
+        <a href="/patients">Patients</a>
+        <a href="/prescriptions">Prescriptions</a>
+        <a href="/schedule">Schedule</a>
+        <a href="/medication-log">Medication Log</a>
+        <a href="/reports">Reports</a>
+
+    </nav>
+
+</header>
+
+
+<main>
+
+    <h1>Patients</h1>
+
+    <p>Add and manage patients.</p>
+
+
+    <!-- ADD PATIENT FORM -->
+
+    <div class="form-card">
+
+        <h2>Add Patient</h2>
+
+        <form action="/patients/add" method="POST">
+
+            <label>Patient Name</label>
+
+            <input
+                type="text"
+                name="name"
+                placeholder="Enter patient name"
+                required
+            >
+
+
+            <label>Age</label>
+
+            <input
+                type="number"
+                name="age"
+                placeholder="Enter age"
+                min="1"
+                max="120"
+            >
+
+
+            <label>Contact</label>
+
+            <input
+                type="text"
+                name="contact"
+                placeholder="Enter contact number"
+            >
+
+
+            <label>Time Zone</label>
+
+            <select name="timezone">
+
+                <option value="Asia/Kolkata">
+                    India - Asia/Kolkata
+                </option>
+
+                <option value="Asia/Singapore">
+                    Singapore - Asia/Singapore
+                </option>
+
+                <option value="Europe/London">
+                    United Kingdom - Europe/London
+                </option>
+
+                <option value="America/New_York">
+                    USA - America/New_York
+                </option>
+
+            </select>
+
+
+            <button type="submit">
+                Add Patient
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- PATIENT LIST -->
+
+    <h2>Patient List</h2>
+
+    <div class="patient-list">
+
+        {% if patients %}
+
+            {% for patient in patients %}
+
+                <div class="patient-card">
+
+                    <h3>
+                        👤 {{ patient["name"] }}
+                    </h3>
+
+                    <p>
+                        Patient ID:
+                        P{{ "%03d"|format(patient["patient_id"]) }}
+                    </p>
+
+                    <p>
+                        Age:
+                        {{ patient["age"] or "Not provided" }}
+                    </p>
+
+                    <p>
+                        Contact:
+                        {{ patient["contact"] or "Not provided" }}
+                    </p>
+
+                    <p>
+                        Time Zone:
+                        {{ patient["timezone"] }}
+                    </p>
+
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No patients have been added yet.</p>
+
+        {% endif %}
+
+    </div>
+
+</main>
+
+</body>
+
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Medication Schedule - MedTrack</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <h2>💊 MedTrack</h2>
+
+    <nav>
+
+        <a href="/">Dashboard</a>
+
+        <a href="/patients">Patients</a>
+
+        <a href="/prescriptions">Prescriptions</a>
+
+        <a href="/schedule">Schedule</a>
+
+        <a href="/medication-log">Medication Log</a>
+
+        <a href="/reports">Reports</a>
+
+    </nav>
+
+</header>
+
+
+<main>
+
+    <h1>Medication Schedule</h1>
+
+    <p>
+        View all scheduled medication doses.
+    </p>
+
+
+    {% if schedule %}
+
+    <table class="schedule-table">
+
+        <thead>
+
+            <tr>
+
+                <th>Patient</th>
+
+                <th>Medicine</th>
+
+                <th>Dosage</th>
+
+                <th>Date & Time</th>
+
+                <th>Status</th>
+                <th>Action</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+
+        {% for dose in schedule %}
+
+
+            <tr>
+
+                <td>
+                    {{ dose["patient_name"] }}
+                </td>
+
+                <td>
+                    {{ dose["medicine_name"] }}
+                </td>
+
+                <td>
+                    {{ dose["dosage"] }}
+                </td>
+
+                <td>
+                    {{ dose["scheduled_datetime"] }}
+                </td>
+
+                <td>
+                    {{ dose["status"] }}
+                </td>
+
+                <td>
+
+                    {% if dose["status"] == "Pending" %}
+
+                        <div class="dose-actions">
+
+                            <form
+                                action="/schedule/{{ dose['schedule_id'] }}/taken"
+                                method="POST">
+
+                                <button
+                                    type="submit"
+                                    class="taken-button">
+
+                                    ✓ Taken
+
+                                </button>
+
+                            </form>
+
+
+                            <form
+                                action="/schedule/{{ dose['schedule_id'] }}/missed"
+                                method="POST">
+
+                                <button
+                                    type="submit"
+                                    class="missed-button">
+
+                                    ✕ Missed
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+
+        {% endfor %}
+
+
+        </tbody>
+
+    </table>
+
+
+    {% else %}
+
+
+        <p>
+            No medication doses have been scheduled yet.
+        </p>
+
+
+    {% endif %}
+
+
+</main>
+
+
+</body>
+
+</html>

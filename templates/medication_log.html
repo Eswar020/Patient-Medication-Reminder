@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Medication Log - MedTrack</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <h2>💊 MedTrack</h2>
+
+    <nav>
+
+        <a href="/">Dashboard</a>
+
+        <a href="/patients">Patients</a>
+
+        <a href="/prescriptions">Prescriptions</a>
+
+        <a href="/schedule">Schedule</a>
+
+        <a href="/medication-log">Medication Log</a>
+
+        <a href="/reports">Reports</a>
+
+    </nav>
+
+</header>
+
+
+<main>
+
+    <h1>Medication Log</h1>
+
+    <p>
+        View taken and missed medication history.
+    </p>
+
+
+    {% if logs %}
+
+
+    <table class="schedule-table">
+
+        <thead>
+
+            <tr>
+
+                <th>Patient</th>
+
+                <th>Medicine</th>
+
+                <th>Dosage</th>
+
+                <th>Scheduled Time</th>
+
+                <th>Status</th>
+
+                <th>Taken Time</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+
+        {% for log in logs %}
+
+
+            <tr>
+
+                <td>
+                    {{ log["patient_name"] }}
+                </td>
+
+                <td>
+                    {{ log["medicine_name"] }}
+                </td>
+
+                <td>
+                    {{ log["dosage"] }}
+                </td>
+
+                <td>
+                    {{ log["scheduled_datetime"] }}
+                </td>
+
+                <td>
+                    {{ log["status"] }}
+                </td>
+
+                <td>
+
+                    {% if log["taken_datetime"] %}
+
+                        {{ log["taken_datetime"] }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+
+        {% endfor %}
+
+
+        </tbody>
+
+    </table>
+
+
+    {% else %}
+
+
+        <p>
+            No medication activity has been recorded yet.
+        </p>
+
+
+    {% endif %}
+
+
+</main>
+
+
+</body>
+
+</html>

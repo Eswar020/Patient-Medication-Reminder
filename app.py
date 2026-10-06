@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 import database
@@ -76,6 +76,7 @@ def add_prescription():
     start_date = request.form.get("start_date")
     end_date = request.form.get("end_date")
     start_time = request.form.get("start_time")
+    reminder_minutes = request.form.get("reminder_minutes")
 
     if not all([
         patient_id,
@@ -84,7 +85,8 @@ def add_prescription():
         frequency,
         start_date,
         end_date,
-        start_time
+        start_time,
+        reminder_minutes
     ]):
         return "All prescription fields are required.", 400
 
@@ -98,7 +100,8 @@ def add_prescription():
         frequency,
         start_date,
         end_date,
-        start_time
+        start_time,
+        reminder_minutes
     )
 
     dose_schedule = scheduler.generate_schedule(
@@ -110,9 +113,14 @@ def add_prescription():
 
     for dose in dose_schedule:
 
+        reminder_time = dose - timedelta(
+            minutes=int(reminder_minutes)
+        )
+
         database.add_schedule_dose(
             prescription_id,
-            dose.strftime("%Y-%m-%d %H:%M")
+            dose.strftime("%Y-%m-%d %H:%M"),
+            reminder_time.strftime("%Y-%m-%d %H:%M")
         )
 
 

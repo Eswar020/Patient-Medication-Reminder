@@ -26,7 +26,9 @@ def create_tables():
     connection.close()
 
     create_prescription_table()
+    add_reminder_column()
     create_schedule_table()
+    add_reminder_datetime_column()
 
 
 def add_patient(name, age, contact, timezone):
@@ -83,21 +85,24 @@ def add_prescription(
         frequency,
         start_date,
         end_date,
-        start_time):
+        start_time,
+        reminder_minutes):
 
     connection = get_connection()
 
     cursor = connection.execute("""
-        INSERT INTO prescriptions (
-            patient_id,
-            medicine_name,
-            dosage,
-            frequency,
-            start_date,
-            end_date,
-            start_time
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO prescriptions
+    (
+        patient_id,
+        medicine_name,
+        dosage,
+        frequency,
+        start_date,
+        end_date,
+        start_time,
+        reminder_minutes
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         patient_id,
         medicine_name,
@@ -105,7 +110,8 @@ def add_prescription(
         frequency,
         start_date,
         end_date,
-        start_time
+        start_time,
+        reminder_minutes
     ))
 
     prescription_id = cursor.lastrowid
@@ -163,19 +169,24 @@ def create_schedule_table():
     connection.close()
 
 
-def add_schedule_dose(prescription_id, scheduled_datetime):
+def add_schedule_dose(
+        prescription_id,
+        scheduled_datetime,
+        reminder_datetime):
 
     connection = get_connection()
 
     connection.execute("""
         INSERT INTO medication_schedule (
             prescription_id,
-            scheduled_datetime
+            scheduled_datetime,
+            reminder_datetime
         )
-        VALUES (?, ?)
+        VALUES (?, ?, ?)
     """, (
         prescription_id,
-        scheduled_datetime
+        scheduled_datetime,
+        reminder_datetime
     ))
 
     connection.commit()
@@ -195,6 +206,7 @@ def get_all_schedule():
             medication_schedule.scheduled_datetime,
             medication_schedule.status,
             medication_schedule.taken_datetime,
+            medication_schedule.reminder_datetime,
 
             prescriptions.medicine_name,
             prescriptions.dosage,
@@ -335,3 +347,39 @@ def get_weekly_report():
     return report
 
 
+def add_reminder_column():
+    connection = get_connection()
+
+    columns = connection.execute(
+        "PRAGMA table_info(prescriptions)"
+    ).fetchall()
+
+    column_names = [column["name"] for column in columns]
+
+    if "reminder_minutes" not in column_names:
+        connection.execute("""
+            ALTER TABLE prescriptions
+            ADD COLUMN reminder_minutes INTEGER DEFAULT 10
+        """)
+
+    connection.commit()
+    connection.close()
+
+
+def add_reminder_datetime_column():
+    connection = get_connection()
+
+    columns = connection.execute(
+        "PRAGMA table_info(medication_schedule)"
+    ).fetchall()
+
+    column_names = [column["name"] for column in columns]
+
+    if "reminder_datetime" not in column_names:
+        connection.execute("""
+            ALTER TABLE medication_schedule
+            ADD COLUMN reminder_datetime TEXT
+        """)
+
+    connection.commit()
+    connection.close()

@@ -1,68 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>MedTrack</title>
+        <title>MedTrack</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}">
+    </head>
 
-<body>
+    <body>
 
-    <header>
-        <h2>💊 MedTrack</h2>
+        <header>
+            <h2>💊 MedTrack</h2>
 
-        <nav>
-            <a href="/">Dashboard</a>
-            <a href="/patients">Patients</a>
-            <a href="/prescriptions">Prescriptions</a>
-            <a href="/schedule">Schedule</a>
-            <a href="/medication-log">Medication Log</a>
-            <a href="/reports">Reports</a>
-        </nav>
-    </header>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/patients">Patients</a>
+                <a href="/prescriptions">Prescriptions</a>
+                <a href="/schedule">Schedule</a>
+                <a href="/medication-log">Medication Log</a>
+                <a href="/reports">Reports</a>
+            </nav>
+        </header>
 
-    <main>
+        <main>
 
-        <h1>Patient Medication Reminder</h1>
+            <h1>Patient Medication Reminder</h1>
 
-        <p>
-            Manage prescriptions, medication reminders,
-            adherence logs and weekly reports.
-        </p>
+            <p>
+                Manage prescriptions, medication reminders,
+                adherence logs and weekly reports.
+            </p>
 
-        <section class="cards">
+            <section class="cards">
 
-            <div class="card">
-                <h3>Medicines</h3>
-                <h2>0</h2>
-            </div>
+                <div class="card">
+                    <h3>Medicines</h3>
+                    <h2>0</h2>
+                </div>
 
-            <div class="card">
-                <h3>Today's Doses</h3>
-                <h2>0</h2>
-            </div>
+                <div class="card">
+                    <h3>Today's Doses</h3>
+                    <h2>0</h2>
+                </div>
 
-            <div class="card">
-                <h3>Taken</h3>
-                <h2>0</h2>
-            </div>
+                <div class="card">
+                    <h3>Taken</h3>
+                    <h2>0</h2>
+                </div>
 
-            <div class="card">
-                <h3>Missed</h3>
-                <h2>0</h2>
-            </div>
+                <div class="card">
+                    <h3>Missed</h3>
+                    <h2>0</h2>
+                </div>
 
-        </section>
+            </section>
 
-        <button>Add Prescription</button>
+            <button>Add Prescription</button>
 
-    </main>
+        </main>
 
-</body>
+
+        <script>
+        // Ask the user for notification permission
+            if ("Notification" in window) {
+                if (Notification.permission === "default") {
+                    Notification.requestPermission();
+                }
+            }
+
+            async function checkMedicationReminders() {
+                try {
+                    const response = await fetch("/api/reminders");
+                    const reminders = await response.json();
+
+                    reminders.forEach(reminder => {
+
+                        const title = "💊 MedTrack Medication Reminder";
+
+                        const message =
+                            `${reminder.patient_name}, your ${reminder.medicine_name} ` +
+                            `(${reminder.dosage}) dose is scheduled for ` +
+                            `${reminder.scheduled_datetime}.`;
+
+                        if (Notification.permission === "granted") {
+                            new Notification(title, {
+                                body: message
+                            });
+                        }
+                    });
+
+                } catch (error) {
+                    console.error("Reminder check failed:", error);
+                }
+            }
+
+            // Check immediately when the page opens
+            checkMedicationReminders();
+
+            // Check every 30 seconds
+            setInterval(checkMedicationReminders, 30000);
+        </script>
+
+    </body>
 
 </html>

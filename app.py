@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from datetime import datetime, timedelta
 
 
@@ -210,6 +210,32 @@ def reports():
     )
 
 
+
+@app.route("/api/reminders")
+def check_reminders():
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    reminders = database.get_due_reminders(current_time)
+
+    reminder_list = []
+
+    for reminder in reminders:
+
+        reminder_list.append({
+            "schedule_id": reminder["schedule_id"],
+            "patient_name": reminder["patient_name"],
+            "medicine_name": reminder["medicine_name"],
+            "dosage": reminder["dosage"],
+            "scheduled_datetime": reminder["scheduled_datetime"],
+            "reminder_minutes": reminder["reminder_minutes"]
+        })
+
+        database.mark_reminder_sent(
+            reminder["schedule_id"]
+        )
+
+    return jsonify(reminder_list)
 
 if __name__ == "__main__":
     app.run(debug=True)

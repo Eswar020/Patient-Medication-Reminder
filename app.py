@@ -216,14 +216,22 @@ def check_reminders():
 
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    reminders = database.get_due_reminders(current_time)
-
     reminder_list = []
 
-    for reminder in reminders:
+
+    # ==================================
+    # 1. EARLY REMINDERS
+    # ==================================
+
+    early_reminders = database.get_due_reminders(
+        current_time
+    )
+
+    for reminder in early_reminders:
 
         reminder_list.append({
             "schedule_id": reminder["schedule_id"],
+            "reminder_type": "early",
             "patient_name": reminder["patient_name"],
             "medicine_name": reminder["medicine_name"],
             "dosage": reminder["dosage"],
@@ -234,6 +242,31 @@ def check_reminders():
         database.mark_reminder_sent(
             reminder["schedule_id"]
         )
+
+
+    # ==================================
+    # 2. DOSE-TIME REMINDERS
+    # ==================================
+
+    dose_reminders = database.get_due_dose_reminders(
+        current_time
+    )
+
+    for reminder in dose_reminders:
+
+        reminder_list.append({
+            "schedule_id": reminder["schedule_id"],
+            "reminder_type": "dose_time",
+            "patient_name": reminder["patient_name"],
+            "medicine_name": reminder["medicine_name"],
+            "dosage": reminder["dosage"],
+            "scheduled_datetime": reminder["scheduled_datetime"]
+        })
+
+        database.mark_dose_reminder_sent(
+            reminder["schedule_id"]
+        )
+
 
     return jsonify(reminder_list)
 

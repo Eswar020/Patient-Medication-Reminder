@@ -64,45 +64,275 @@
         </main>
 
 
+        <!-- Medication Reminder Popup -->
+            <div id="reminderPopup" class="reminder-popup">
+
+                <div class="reminder-popup-content">
+
+                    <h2 id="reminderTitle">💊 Medication Reminder</h2>
+
+                    <p>
+                        <strong>Patient:</strong>
+                        <span id="reminderPatient"></span>
+                    </p>
+
+                    <p>
+                        <strong>Medicine:</strong>
+                        <span id="reminderMedicine"></span>
+                    </p>
+
+                    <p>
+                        <strong>Dosage:</strong>
+                        <span id="reminderDosage"></span>
+                    </p>
+
+                    <p>
+                        <strong>Dose Time:</strong>
+                        <span id="reminderDoseTime"></span>
+                    </p>
+
+                    <div class="reminder-actions">
+
+                        <button
+                            id="reminderTaken"
+                            class="taken-button">
+                            ✓ Taken
+                        </button>
+
+                        <button
+                            id="reminderSecondButton"
+                            class="missed-button">
+                            ✕ Missed
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
         <script>
-        // Ask the user for notification permission
+
             if ("Notification" in window) {
                 if (Notification.permission === "default") {
                     Notification.requestPermission();
                 }
             }
 
+
+            let currentReminder = null;
+
+
             async function checkMedicationReminders() {
+
                 try {
+
                     const response = await fetch("/api/reminders");
                     const reminders = await response.json();
 
-                    reminders.forEach(reminder => {
+                    if (reminders.length === 0) {
+                        return;
+                    }
 
-                        const title = "💊 MedTrack Medication Reminder";
+                    const reminder = reminders[0];
 
-                        const message =
-                            `${reminder.patient_name}, your ${reminder.medicine_name} ` +
-                            `(${reminder.dosage}) dose is scheduled for ` +
-                            `${reminder.scheduled_datetime}.`;
+                    currentReminder = reminder;
 
+
+                    // =====================================
+                    // EARLY REMINDER
+                    // =====================================
+
+                    if (reminder.reminder_type === "early") {
+
+                        document.getElementById(
+                            "reminderTitle"
+                        ).textContent = "💊 Medication Due Soon";
+
+                        document.getElementById(
+                            "reminderSecondButton"
+                        ).textContent = "⏰ Remind at Dose Time";
+
+
+                        // Browser notification
                         if (Notification.permission === "granted") {
-                            new Notification(title, {
-                                body: message
-                            });
-                        }
-                    });
 
-                } catch (error) {
-                    console.error("Reminder check failed:", error);
+                            new Notification(
+                                "💊 MedTrack Medication Reminder",
+                                {
+                                    body:
+                                        `${reminder.patient_name}, ` +
+                                        `${reminder.medicine_name} ` +
+                                        `(${reminder.dosage}) is due soon.`
+                                }
+                            );
+
+                        }
+
+                    }
+
+
+                    // =====================================
+                    // DOSE-TIME REMINDER
+                    // =====================================
+
+                    else if (reminder.reminder_type === "dose_time") {
+
+                        document.getElementById(
+                            "reminderTitle"
+                        ).textContent = "💊 Time To Take Your Medicine";
+
+                        document.getElementById(
+                            "reminderSecondButton"
+                        ).textContent = "✕ Missed";
+
+
+                        // Browser notification
+                        if (Notification.permission === "granted") {
+
+                            new Notification(
+                                "💊 Time To Take Your Medicine",
+                                {
+                                    body:
+                                        `${reminder.patient_name}, ` +
+                                        `it is time to take ` +
+                                        `${reminder.medicine_name} ` +
+                                        `(${reminder.dosage}).`
+                                }
+                            );
+
+                        }
+
+                    }
+
+
+                    // =====================================
+                    // Fill popup information
+                    // =====================================
+
+                    document.getElementById(
+                        "reminderPatient"
+                    ).textContent = reminder.patient_name;
+
+                    document.getElementById(
+                        "reminderMedicine"
+                    ).textContent = reminder.medicine_name;
+
+                    document.getElementById(
+                        "reminderDosage"
+                    ).textContent = reminder.dosage;
+
+                    document.getElementById(
+                        "reminderDoseTime"
+                    ).textContent = reminder.scheduled_datetime;
+
+
+                    // Show popup
+                    document.getElementById(
+                        "reminderPopup"
+                    ).style.display = "flex";
+
                 }
+
+                catch (error) {
+
+                    console.error(
+                        "Reminder check failed:",
+                        error
+                    );
+
+                }
+
             }
 
-            // Check immediately when the page opens
+
+            // =====================================
+            // TAKEN BUTTON
+            // =====================================
+
+            document.getElementById("reminderTaken")
+                .addEventListener("click", async function () {
+
+                    if (!currentReminder) {
+                        return;
+                    }
+
+                    await fetch(
+                        `/schedule/${currentReminder.schedule_id}/taken`,
+                        {
+                            method: "POST"
+                        }
+                    );
+
+                    document.getElementById(
+                        "reminderPopup"
+                    ).style.display = "none";
+
+                    currentReminder = null;
+
+                });
+
+
+            // =====================================
+            // SECOND BUTTON
+            // =====================================
+
+            document.getElementById("reminderSecondButton")
+                .addEventListener("click", async function () {
+
+                    if (!currentReminder) {
+                        return;
+                    }
+
+
+                    // EARLY REMINDER
+                    // Just close the popup.
+                    // Status stays Pending.
+                    if (currentReminder.reminder_type === "early") {
+
+                        document.getElementById(
+                            "reminderPopup"
+                        ).style.display = "none";
+
+                        currentReminder = null;
+
+                        return;
+                    }
+
+
+                    // DOSE-TIME REMINDER
+                    // Mark medication as Missed.
+                    if (currentReminder.reminder_type === "dose_time") {
+
+                        await fetch(
+                            `/schedule/${currentReminder.schedule_id}/missed`,
+                            {
+                                method: "POST"
+                            }
+                        );
+
+                        document.getElementById(
+                            "reminderPopup"
+                        ).style.display = "none";
+
+                        currentReminder = null;
+
+                    }
+
+                });
+
+
+            // Check immediately
             checkMedicationReminders();
 
+
             // Check every 30 seconds
-            setInterval(checkMedicationReminders, 30000);
+            setInterval(
+                checkMedicationReminders,
+                30000
+            );
+
         </script>
 
     </body>

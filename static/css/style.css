@@ -203,3 +203,40 @@ button {
     background: #28a745;
     border-radius: 10px;
 }
+
+.reminder-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.reminder-popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 350px;
+    max-width: 90%;
+}
+
+.reminder-popup-content h2 {
+    margin-top: 0;
+}
+
+.reminder-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.reminder-actions button {
+    flex: 1;
+    padding: 10px;
+    cursor: pointer;
+}

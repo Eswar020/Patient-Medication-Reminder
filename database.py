@@ -25,11 +25,16 @@ def create_tables():
     connection.commit()
     connection.close()
 
+
     create_prescription_table()
     add_reminder_column()
+
     create_schedule_table()
     add_reminder_datetime_column()
     add_reminder_sent_column()
+    add_dose_reminder_sent_column()
+
+
 
 
 def add_patient(name, age, contact, timezone):
@@ -405,6 +410,28 @@ def add_reminder_sent_column():
     connection.close()
 
 
+def add_dose_reminder_sent_column():
+
+    connection = get_connection()
+
+    columns = connection.execute(
+        "PRAGMA table_info(medication_schedule)"
+    ).fetchall()
+
+    column_names = [
+        column["name"] for column in columns
+    ]
+
+    if "dose_reminder_sent" not in column_names:
+
+        connection.execute("""
+            ALTER TABLE medication_schedule
+            ADD COLUMN dose_reminder_sent INTEGER DEFAULT 0
+        """)
+
+    connection.commit()
+    connection.close()
+
 
 def get_due_reminders(current_datetime):
 
@@ -452,6 +479,64 @@ def get_due_reminders(current_datetime):
     connection.close()
 
     return reminders
+
+def get_due_dose_reminders(current_datetime):
+
+    connection = get_connection()
+
+    reminders = connection.execute("""
+        SELECT
+            medication_schedule.schedule_id,
+            medication_schedule.scheduled_datetime,
+
+            prescriptions.medicine_name,
+            prescriptions.dosage,
+
+            patients.name AS patient_name
+
+        FROM medication_schedule
+
+        JOIN prescriptions
+        ON medication_schedule.prescription_id =
+           prescriptions.prescription_id
+
+        JOIN patients
+        ON prescriptions.patient_id =
+           patients.patient_id
+
+        WHERE medication_schedule.status = 'Pending'
+
+        AND medication_schedule.dose_reminder_sent = 0
+
+        AND datetime(medication_schedule.scheduled_datetime)
+            <= datetime(?)
+
+        ORDER BY medication_schedule.scheduled_datetime ASC
+
+    """, (
+        current_datetime,
+    )).fetchall()
+
+    connection.close()
+
+    return reminders
+
+def mark_dose_reminder_sent(schedule_id):
+
+    connection = get_connection()
+
+    connection.execute("""
+        UPDATE medication_schedule
+
+        SET dose_reminder_sent = 1
+
+        WHERE schedule_id = ?
+    """, (
+        schedule_id,
+    ))
+
+    connection.commit()
+    connection.close()
 
 
 def mark_reminder_sent(schedule_id):

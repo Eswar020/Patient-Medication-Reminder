@@ -237,6 +237,27 @@ def get_all_schedule():
 
     return schedule
 
+def mark_overdue_doses_as_missed(current_datetime):
+
+    connection = get_connection()
+
+    connection.execute("""
+        UPDATE medication_schedule
+
+        SET status = 'Missed'
+
+        WHERE status = 'Pending'
+
+        AND datetime(scheduled_datetime, '+1 minutes')
+            <= datetime(?)
+
+    """, (
+        current_datetime,
+    ))
+
+    connection.commit()
+    connection.close()
+
 
 
 # ============== 
@@ -551,3 +572,247 @@ def mark_reminder_sent(schedule_id):
 
     connection.commit()
     connection.close()
+
+
+
+def get_dashboard_stats():
+
+    connection = get_connection()
+
+    # Count active prescriptions
+    active_prescriptions = connection.execute("""
+        SELECT COUNT(*) AS total
+        FROM prescriptions
+        WHERE date(end_date) >= date('now', 'localtime')
+        AND date(start_date) <= date('now', 'localtime')
+    """).fetchone()["total"]
+
+    # Count all doses scheduled for today
+    todays_doses = connection.execute("""
+        SELECT COUNT(*) AS total
+        FROM medication_schedule
+        WHERE date(scheduled_datetime) = date('now', 'localtime')
+    """).fetchone()["total"]
+
+    # Count doses marked Taken today
+    taken_doses = connection.execute("""
+        SELECT COUNT(*) AS total
+        FROM medication_schedule
+        WHERE date(scheduled_datetime) = date('now', 'localtime')
+        AND status = 'Taken'
+    """).fetchone()["total"]
+
+    # Count doses marked Missed today
+    missed_doses = connection.execute("""
+        SELECT COUNT(*) AS total
+        FROM medication_schedule
+        WHERE date(scheduled_datetime) = date('now', 'localtime')
+        AND status = 'Missed'
+    """).fetchone()["total"]
+
+    connection.close()
+
+    return {
+        "medicines": active_prescriptions,
+        "todays_doses": todays_doses,
+        "taken": taken_doses,
+        "missed": missed_doses
+    }
+
+
+
+
+def get_prescription_by_id(prescription_id):
+
+    connection = get_connection()
+
+    prescription = connection.execute("""
+        SELECT
+            prescription_id,
+            patient_id,
+            medicine_name,
+            dosage,
+            frequency,
+            start_date,
+            end_date,
+            start_time,
+            reminder_minutes
+        FROM prescriptions
+        WHERE prescription_id = ?
+    """, (prescription_id,)).fetchone()
+
+    connection.close()
+
+    return prescription
+
+
+
+
+def update_prescription_details(prescription_id, medicine_name, dosage):
+    connection = get_connection()
+
+    cursor = connection.execute("""
+        UPDATE prescriptions
+        SET medicine_name = ?,
+            dosage = ?
+        WHERE prescription_id = ?
+    """, (medicine_name, dosage, prescription_id))
+
+    connection.commit()
+    updated = cursor.rowcount
+    connection.close()
+
+    return updated
+
+
+
+
+def replace_future_pending_doses(prescription_id, new_doses):
+
+    from datetime import datetime
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    connection = get_connection()
+
+    try:
+        # Preserve all Taken/Missed records.
+        # Delete only future Pending doses.
+        connection.execute("""
+            DELETE FROM medication_schedule
+            WHERE prescription_id = ?
+              AND status = 'Pending'
+              AND datetime(scheduled_datetime) > datetime(?)
+        """, (prescription_id, current_time))
+
+        # Insert the new future schedule.
+        for scheduled_datetime, reminder_datetime in new_doses:
+
+            connection.execute("""
+                INSERT INTO medication_schedule (
+                    prescription_id,
+                    scheduled_datetime,
+                    reminder_datetime,
+                    status,
+                    reminder_sent,
+                    dose_reminder_sent
+                )
+                VALUES (?, ?, ?, 'Pending', 0, 0)
+            """, (
+                prescription_id,
+                scheduled_datetime,
+                reminder_datetime
+            ))
+
+        connection.commit()
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+
+
+
+def update_prescription_and_schedule(
+    prescription_id,
+    patient_id,
+    medicine_name,
+    dosage,
+    frequency,
+    start_date,
+    end_date,
+    start_time,
+    reminder_minutes,
+    new_doses
+):
+    from datetime import datetime
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    connection = get_connection()
+
+    try:
+        connection.execute("BEGIN")
+
+        # Update prescription details.
+        connection.execute("""
+            UPDATE prescriptions
+            SET patient_id = ?,
+                medicine_name = ?,
+                dosage = ?,
+                frequency = ?,
+                start_date = ?,
+                end_date = ?,
+                start_time = ?,
+                reminder_minutes = ?
+            WHERE prescription_id = ?
+        """, (
+            patient_id,
+            medicine_name,
+            dosage,
+            frequency,
+            start_date,
+            end_date,
+            start_time,
+            reminder_minutes,
+            prescription_id
+        ))
+
+        # Remove only future Pending doses.
+        connection.execute("""
+            DELETE FROM medication_schedule
+            WHERE prescription_id = ?
+              AND status = 'Pending'
+              AND scheduled_datetime > ?
+        """, (prescription_id, current_time))
+
+        
+        # Find dates with already recorded doses.
+        recorded_rows = connection.execute("""
+            SELECT DISTINCT date(scheduled_datetime) AS dose_date
+            FROM medication_schedule
+            WHERE prescription_id = ?
+              AND status IN ('Taken', 'Missed')
+        """, (prescription_id,)).fetchall()
+
+        recorded_dates = {
+            row["dose_date"] for row in recorded_rows
+        }
+
+        # Insert future doses only on dates without
+        # an existing Taken or Missed record.
+        for scheduled_datetime, reminder_datetime in new_doses:
+
+            dose_date = scheduled_datetime[:10]
+
+            if dose_date in recorded_dates:
+                continue
+
+            connection.execute("""
+                INSERT INTO medication_schedule (
+                    prescription_id,
+                    scheduled_datetime,
+                    reminder_datetime,
+                    status,
+                    reminder_sent,
+                    dose_reminder_sent
+                )
+                VALUES (?, ?, ?, 'Pending', 0, 0)
+            """, (
+                prescription_id,
+                scheduled_datetime,
+                reminder_datetime
+            ))
+
+
+        connection.commit()
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()

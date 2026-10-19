@@ -18,9 +18,18 @@ app = Flask(__name__)
 database.create_tables()
 
 
+
 @app.route("/")
 def home():
-    return render_template("index.html")
+
+    # Retrieve dashboard statistics from SQLite
+    stats = database.get_dashboard_stats()
+
+    return render_template(
+        "index.html",
+        stats=stats
+    )
+
 
 
 @app.route("/patients")
@@ -216,6 +225,10 @@ def check_reminders():
 
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
+    database.mark_overdue_doses_as_missed(
+        current_time
+    )
+
     reminder_list = []
 
 
@@ -269,6 +282,116 @@ def check_reminders():
 
 
     return jsonify(reminder_list)
+
+
+
+
+
+@app.route("/prescriptions/<int:prescription_id>/edit")
+def edit_prescription(prescription_id):
+
+    prescription = database.get_prescription_by_id(
+        prescription_id
+    )
+
+    if prescription is None:
+        return "Prescription not found.", 404
+
+    patients = database.get_all_patients()
+
+    return render_template(
+        "edit_prescription.html",
+        prescription=prescription,
+        patients=patients
+    )
+
+
+
+
+
+
+@app.route("/prescriptions/<int:prescription_id>/update", methods=["POST"])
+def update_prescription(prescription_id):
+
+    prescription = database.get_prescription_by_id(prescription_id)
+
+    if prescription is None:
+        return "Prescription not found.", 404
+
+    # Keep patient unchanged to protect patient history.
+    patient_id = prescription["patient_id"]
+
+    medicine_name = request.form.get("medicine_name", "").strip()
+    dosage = request.form.get("dosage", "").strip()
+    frequency = request.form.get("frequency", "").strip()
+    start_date = request.form.get("start_date", "").strip()
+    end_date = request.form.get("end_date", "").strip()
+    start_time = request.form.get("start_time", "").strip()
+    reminder_minutes = request.form.get("reminder_minutes", "").strip()
+
+    if not all([
+        medicine_name, dosage, frequency,
+        start_date, end_date, start_time, reminder_minutes
+    ]):
+        return "All prescription fields are required.", 400
+
+    if frequency not in ("once_daily", "twice_daily", "every_8_hours"):
+        return "Invalid frequency.", 400
+
+    if reminder_minutes not in ("5", "10", "15"):
+        return "Invalid reminder interval.", 400
+
+    try:
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        datetime.strptime(start_time, "%H:%M")
+    except ValueError:
+        return "Invalid date or time.", 400
+
+    if end < start:
+        return "End date cannot be before start date.", 400
+
+    # Generate the updated schedule.
+    generated_doses = scheduler.generate_schedule(
+        start_date,
+        end_date,
+        start_time,
+        frequency
+    )
+
+    now = datetime.now()
+    new_doses = []
+
+    for dose in generated_doses:
+        # Only regenerate future doses.
+        if dose <= now:
+            continue
+
+        reminder_time = dose - timedelta(
+            minutes=int(reminder_minutes)
+        )
+
+        new_doses.append((
+            dose.strftime("%Y-%m-%d %H:%M"),
+            reminder_time.strftime("%Y-%m-%d %H:%M")
+        ))
+
+    database.update_prescription_and_schedule(
+        prescription_id,
+        patient_id,
+        medicine_name,
+        dosage,
+        frequency,
+        start_date,
+        end_date,
+        start_time,
+        int(reminder_minutes),
+        new_doses
+    )
+
+    return redirect(url_for("prescriptions"))
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

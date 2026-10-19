@@ -35,29 +35,31 @@
                 adherence logs and weekly reports.
             </p>
 
+            
             <section class="cards">
 
                 <div class="card">
-                    <h3>Medicines</h3>
-                    <h2>0</h2>
+                    <h3>Active Prescriptions</h3>
+                    <h2>{{ stats.medicines }}</h2>
                 </div>
 
                 <div class="card">
                     <h3>Today's Doses</h3>
-                    <h2>0</h2>
+                    <h2>{{ stats.todays_doses }}</h2>
                 </div>
 
                 <div class="card">
-                    <h3>Taken</h3>
-                    <h2>0</h2>
+                    <h3>Taken Today</h3>
+                    <h2>{{ stats.taken }}</h2>
                 </div>
 
                 <div class="card">
-                    <h3>Missed</h3>
-                    <h2>0</h2>
+                    <h3>Missed Today</h3>
+                    <h2>{{ stats.missed }}</h2>
                 </div>
 
             </section>
+
 
             <button>Add Prescription</button>
 

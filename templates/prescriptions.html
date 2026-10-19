@@ -243,6 +243,26 @@
                 </p>
 
 
+
+
+                <button type="button"
+                        data-prescription='{{ {
+                            "prescription_id": prescription.prescription_id,
+                            "patient_id": prescription.patient_id,
+                            "medicine_name": prescription.medicine_name,
+                            "dosage": prescription.dosage,
+                            "frequency": prescription.frequency,
+                            "start_date": prescription.start_date,
+                            "end_date": prescription.end_date,
+                            "start_time": prescription.start_time,
+                            "reminder_minutes": prescription.reminder_minutes
+                        } | tojson | forceescape }}'
+                        onclick="openEditModal(this)">
+                    Edit
+                </button>
+
+
+
             </div>
 
 
@@ -264,6 +284,136 @@
 
 
 </main>
+
+
+<!-- Edit Prescription Popup -->
+<div id="editPrescriptionModal" class="edit-modal">
+
+    <div class="edit-modal-content">
+
+        <h2>Edit Prescription</h2>
+
+        <form id="editPrescriptionForm" method="POST">
+
+            <label>Patient</label>
+            <select name="patient_id" id="editPatient" required disabled>
+                {% for patient in patients %}
+                <option value="{{ patient.patient_id }}">
+                    {{ patient.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <label>Medicine Name</label>
+            <input type="text"
+                   name="medicine_name"
+                   id="editMedicine"
+                   required>
+
+            <label>Dosage</label>
+            <input type="text"
+                   name="dosage"
+                   id="editDosage"
+                   required>
+
+            <label>Frequency</label>
+            <select name="frequency" id="editFrequency" required>
+                <option value="once_daily">Once Daily</option>
+                <option value="twice_daily">Twice Daily</option>
+                <option value="every_8_hours">Every 8 Hours</option>
+            </select>
+
+            <label>Start Date</label>
+            <input type="date"
+                   name="start_date"
+                   id="editStartDate"
+                   required>
+
+            <label>End Date</label>
+            <input type="date"
+                   name="end_date"
+                   id="editEndDate"
+                   required>
+
+            <label>Start Time</label>
+            <input type="time"
+                   name="start_time"
+                   id="editStartTime"
+                   required>
+
+            <label>Reminder Before Dose</label>
+            <select name="reminder_minutes"
+                    id="editReminderMinutes"
+                    required>
+                <option value="5">5 minutes before</option>
+                <option value="10">10 minutes before</option>
+                <option value="15">15 minutes before</option>
+            </select>
+
+            <div class="edit-modal-actions">
+                <button type="submit">Save Changes</button>
+
+                <button type="button"
+                        onclick="closeEditModal()">
+                    Cancel
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+
+<script>
+    function openEditModal(button) {
+
+        const prescription = JSON.parse(
+            button.getAttribute("data-prescription")
+        );
+
+        document.getElementById("editPatient").value =
+            prescription.patient_id;
+
+        document.getElementById("editMedicine").value =
+            prescription.medicine_name;
+
+        document.getElementById("editDosage").value =
+            prescription.dosage;
+
+        document.getElementById("editFrequency").value =
+            prescription.frequency;
+
+        document.getElementById("editStartDate").value =
+            prescription.start_date;
+
+        document.getElementById("editEndDate").value =
+            prescription.end_date;
+
+        document.getElementById("editStartTime").value =
+            prescription.start_time;
+
+        document.getElementById("editReminderMinutes").value =
+            prescription.reminder_minutes;
+
+        document.getElementById("editPrescriptionForm").action =
+            `/prescriptions/${prescription.prescription_id}/update`;
+
+        document.getElementById(
+            "editPrescriptionModal"
+        ).style.display = "flex";
+    }
+
+    function closeEditModal() {
+        document.getElementById(
+            "editPrescriptionModal"
+        ).style.display = "none";
+    }
+</script>
+
 
 </body>
 

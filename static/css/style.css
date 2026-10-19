@@ -240,3 +240,44 @@ button {
     padding: 10px;
     cursor: pointer;
 }
+
+
+
+.edit-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.edit-modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 450px;
+    max-width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.edit-modal-content label {
+    display: block;
+    margin-top: 12px;
+}
+
+.edit-modal-content input,
+.edit-modal-content select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+}
+
+.edit-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}

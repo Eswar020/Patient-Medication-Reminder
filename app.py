@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 from datetime import datetime, timedelta
 
 
@@ -13,6 +13,14 @@ import scheduler
 
 
 app = Flask(__name__)
+
+
+import os
+
+app.secret_key = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "medtrack-local-development-only"
+)
 
 # Create database tables when application starts
 database.create_tables()
@@ -59,6 +67,8 @@ def add_patient():
         contact,
         timezone
     )
+
+    flash("Patient added successfully!", "success")
 
     return redirect(url_for("patients"))
 
@@ -131,6 +141,9 @@ def add_prescription():
             dose.strftime("%Y-%m-%d %H:%M"),
             reminder_time.strftime("%Y-%m-%d %H:%M")
         )
+
+
+    flash("Prescription created successfully!", "success")
 
 
 
@@ -338,6 +351,52 @@ def update_prescription(prescription_id):
     if frequency not in ("once_daily", "twice_daily", "every_8_hours"):
         return "Invalid frequency.", 400
 
+    
+    # Prevent frequency changes when medication
+    # history already exists.
+    
+    if frequency != prescription["frequency"]:
+
+        if database.has_recorded_doses(prescription_id):
+
+            flash(
+                "Frequency cannot be changed because this "
+                "prescription already has Taken or Missed doses.",
+                "error"
+            )
+
+            return redirect(url_for("prescriptions"))
+
+
+
+        
+    # Step 11D.4C:
+    # Protect Every 8 Hours prescriptions with recorded history.
+
+    if (
+        prescription["frequency"] == "every_8_hours"
+        and database.has_recorded_doses(prescription_id)
+    ):
+
+        schedule_changed = (
+            start_date != prescription["start_date"]
+            or end_date != prescription["end_date"]
+            or start_time != prescription["start_time"]
+        )
+
+        if schedule_changed:
+
+            flash(
+                "Scheduling changes are restricted for Every 8 Hours "
+                "prescriptions that already have Taken or Missed doses.",
+                "error"
+            )
+
+            return redirect(url_for("prescriptions"))
+
+
+
+
     if reminder_minutes not in ("5", "10", "15"):
         return "Invalid reminder interval.", 400
 
@@ -388,6 +447,36 @@ def update_prescription(prescription_id):
         int(reminder_minutes),
         new_doses
     )
+
+    flash("Prescription updated successfully!", "success")
+
+    return redirect(url_for("prescriptions"))
+
+
+
+
+
+
+
+@app.route("/prescriptions/<int:prescription_id>/delete", methods=["POST"])
+def delete_prescription(prescription_id):
+
+    # Check whether the prescription exists.
+    prescription = database.get_prescription_by_id(
+        prescription_id
+    )
+
+    if prescription is None:
+        flash("Prescription not found.", "error")
+        return redirect(url_for("prescriptions"))
+
+    # Permanently delete the prescription and its dose history.
+    deleted = database.delete_prescription(prescription_id)
+
+    if deleted:
+        flash("Prescription deleted successfully!", "success")
+    else:
+        flash("Unable to delete prescription.", "error")
 
     return redirect(url_for("prescriptions"))
 

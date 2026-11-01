@@ -761,13 +761,27 @@ def update_prescription_and_schedule(
             prescription_id
         ))
 
-        # Remove only future Pending doses.
+       
+        # Protect dates that already have Taken/Missed doses.
+        # Keep remaining Pending doses on those dates.
+
         connection.execute("""
             DELETE FROM medication_schedule
             WHERE prescription_id = ?
               AND status = 'Pending'
               AND scheduled_datetime > ?
-        """, (prescription_id, current_time))
+              AND date(scheduled_datetime) NOT IN (
+                  SELECT date(scheduled_datetime)
+                  FROM medication_schedule
+                  WHERE prescription_id = ?
+                    AND status IN ('Taken', 'Missed')
+              )
+        """, (
+            prescription_id,
+            current_time,
+            prescription_id
+        ))
+
 
         
         # Find dates with already recorded doses.
@@ -808,7 +822,93 @@ def update_prescription_and_schedule(
             ))
 
 
+
+            
+        # Synchronize reminder times for all remaining
+        # future Pending doses, including protected doses.
+
+        connection.execute("""
+            UPDATE medication_schedule
+            SET reminder_datetime = datetime(
+                    scheduled_datetime,
+                    '-' || ? || ' minutes'
+                ),
+                reminder_sent = 0
+            WHERE prescription_id = ?
+              AND status = 'Pending'
+              AND scheduled_datetime > ?
+        """, (
+            reminder_minutes,
+            prescription_id,
+            current_time
+        ))
+
+
+
         connection.commit()
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+
+
+def has_recorded_doses(prescription_id):
+
+    connection = get_connection()
+
+    result = connection.execute("""
+        SELECT 1
+        FROM medication_schedule
+        WHERE prescription_id = ?
+          AND status IN ('Taken', 'Missed')
+        LIMIT 1
+    """, (prescription_id,)).fetchone()
+
+    connection.close()
+
+    return result is not None
+
+
+
+
+
+
+def delete_prescription(prescription_id):
+    connection = get_connection()
+
+    try:
+        connection.execute("BEGIN")
+
+        # Check whether the prescription exists.
+        prescription = connection.execute("""
+            SELECT prescription_id
+            FROM prescriptions
+            WHERE prescription_id = ?
+        """, (prescription_id,)).fetchone()
+
+        if prescription is None:
+            connection.rollback()
+            return False
+
+        # Delete all associated medication schedule records,
+        # including Pending, Taken, and Missed doses.
+        connection.execute("""
+            DELETE FROM medication_schedule
+            WHERE prescription_id = ?
+        """, (prescription_id,))
+
+        # Permanently delete the prescription.
+        connection.execute("""
+            DELETE FROM prescriptions
+            WHERE prescription_id = ?
+        """, (prescription_id,))
+
+        connection.commit()
+        return True
 
     except Exception:
         connection.rollback()

@@ -61,6 +61,55 @@ def get_all_patients():
 
     return patients
 
+
+
+def get_patient_by_id(patient_id):
+
+    connection = get_connection()
+
+    patient = connection.execute("""
+        SELECT patient_id, name, age, contact
+        FROM patients
+        WHERE patient_id = ?
+    """, (patient_id,)).fetchone()
+
+    connection.close()
+
+    return patient
+
+
+def update_patient(patient_id, name, age, contact):
+
+    connection = get_connection()
+
+    try:
+        cursor = connection.execute("""
+            UPDATE patients
+            SET name = ?,
+                age = ?,
+                contact = ?
+            WHERE patient_id = ?
+        """, (
+            name,
+            age,
+            contact,
+            patient_id
+        ))
+
+        connection.commit()
+
+        return cursor.rowcount > 0
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+
+
+
 def create_prescription_table():
     connection = get_connection()
 
@@ -909,6 +958,55 @@ def delete_prescription(prescription_id):
 
         connection.commit()
         return True
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+
+
+
+def delete_patient(patient_id):
+
+    connection = get_connection()
+
+    try:
+        connection.execute("BEGIN")
+
+        # Check whether the patient exists.
+        patient = connection.execute("""
+            SELECT patient_id
+            FROM patients
+            WHERE patient_id = ?
+        """, (patient_id,)).fetchone()
+
+        if patient is None:
+            connection.rollback()
+            return "not_found"
+
+        # Prevent deletion if prescriptions still exist.
+        prescription = connection.execute("""
+            SELECT 1
+            FROM prescriptions
+            WHERE patient_id = ?
+            LIMIT 1
+        """, (patient_id,)).fetchone()
+
+        if prescription is not None:
+            connection.rollback()
+            return "has_prescriptions"
+
+        # Delete patient only when no prescriptions exist.
+        connection.execute("""
+            DELETE FROM patients
+            WHERE patient_id = ?
+        """, (patient_id,))
+
+        connection.commit()
+        return "deleted"
 
     except Exception:
         connection.rollback()

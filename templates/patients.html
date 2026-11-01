@@ -148,6 +148,34 @@
                         {{ patient["timezone"] }}
                     </p>
 
+
+
+                    <button
+                        type="button"
+                        class="edit-patient-btn"
+                        data-patient='{{ {
+                            "patient_id": patient["patient_id"],
+                            "name": patient["name"],
+                            "age": patient["age"],
+                            "contact": patient["contact"]
+                        } | tojson | forceescape }}'
+                        onclick="openEditPatientModal(this)">
+                        Edit
+                    </button>
+
+
+
+                    <button
+                        type="button"
+                        class="delete-patient-btn"
+                        data-id="{{ patient['patient_id'] }}"
+                        data-name="{{ patient['name'] }}"
+                        onclick="openDeletePatientModal(this)">
+                        Delete
+                    </button>
+
+
+
                 </div>
 
             {% endfor %}
@@ -161,6 +189,189 @@
     </div>
 
 </main>
+
+
+
+
+<!-- Delete Patient Confirmation Popup -->
+<div id="deletePatientModal" class="delete-patient-overlay" hidden>
+
+    <div class="delete-patient-modal">
+
+        <h2>Delete Patient?</h2>
+
+        <p>
+            Are you sure you want to permanently delete
+            <strong id="deletePatientName"></strong>?
+        </p>
+
+        <p class="delete-patient-warning">
+            This patient will be permanently removed from
+            the records. This action cannot be undone.
+        </p>
+
+        <p>
+            Patients with existing prescriptions cannot be deleted.
+        </p>
+
+        <form id="deletePatientForm" method="POST">
+
+            <div class="delete-patient-actions">
+
+                <button
+                    type="button"
+                    class="cancel-patient-delete"
+                    onclick="closeDeletePatientModal()">
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="confirm-patient-delete">
+                    Delete
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- Edit Patient Popup -->
+<div id="editPatientModal" class="patient-modal-overlay" hidden>
+
+    <div class="patient-modal">
+
+        <h2>Edit Patient Details</h2>
+
+        <form id="editPatientForm" method="POST">
+
+            <label for="editPatientName">Patient Name</label>
+            <input
+                type="text"
+                id="editPatientName"
+                name="name"
+                required
+            >
+
+            <label for="editPatientAge">Age</label>
+            <input
+                type="number"
+                id="editPatientAge"
+                name="age"
+                min="1"
+                max="120"
+            >
+
+            <label for="editPatientContact">Contact Number</label>
+            <input
+                type="text"
+                id="editPatientContact"
+                name="contact"
+            >
+
+            <div class="patient-modal-actions">
+
+                <button
+                    type="button"
+                    class="patient-cancel-btn"
+                    onclick="closeEditPatientModal()">
+                    Cancel
+                </button>
+
+                <button type="submit" class="patient-save-btn">
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="toast-container">
+            {% for category, message in messages %}
+                <div class="toast toast-{{ category }}" role="alert">
+                    <span>{{ message }}</span>
+                    <button type="button"
+                            class="toast-close"
+                            onclick="this.parentElement.remove()">
+                        &times;
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<script>
+    document.querySelectorAll(".toast").forEach(toast => {
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+    });
+
+
+    function openEditPatientModal(button) {
+
+        const patient = JSON.parse(
+            button.getAttribute("data-patient")
+        );
+
+        document.getElementById("editPatientName").value =
+            patient.name;
+
+        document.getElementById("editPatientAge").value =
+            patient.age ?? "";
+
+        document.getElementById("editPatientContact").value =
+            patient.contact ?? "";
+
+        document.getElementById("editPatientForm").action =
+            `/patients/${encodeURIComponent(patient.patient_id)}/update`;
+
+        document.getElementById("editPatientModal").hidden = false;
+    }
+
+    function closeEditPatientModal() {
+
+        document.getElementById("editPatientModal").hidden = true;
+    }
+
+
+
+    function openDeletePatientModal(button) {
+
+        const patientId = button.dataset.id;
+        const patientName = button.dataset.name;
+
+        document.getElementById("deletePatientName").textContent =
+            patientName;
+
+        document.getElementById("deletePatientForm").action =
+            `/patients/${encodeURIComponent(patientId)}/delete`;
+
+        document.getElementById("deletePatientModal").hidden = false;
+    }
+
+    function closeDeletePatientModal() {
+
+        document.getElementById("deletePatientModal").hidden = true;
+    }
+
+
+</script>
+
 
 </body>
 

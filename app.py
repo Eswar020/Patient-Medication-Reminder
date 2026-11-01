@@ -72,6 +72,82 @@ def add_patient():
 
     return redirect(url_for("patients"))
 
+
+
+@app.route("/patients/<int:patient_id>/update", methods=["POST"])
+def update_patient(patient_id):
+
+    # Check whether the patient exists.
+    patient = database.get_patient_by_id(patient_id)
+
+    if patient is None:
+        flash("Patient not found.", "error")
+        return redirect(url_for("patients"))
+
+    # Get updated patient information.
+    name = request.form.get("name", "").strip()
+    age = request.form.get("age", "").strip()
+    contact = request.form.get("contact", "").strip()
+
+    # Validate patient name.
+    if not name:
+        flash("Patient name is required.", "error")
+        return redirect(url_for("patients"))
+
+    # Validate age if provided.
+    if age:
+        try:
+            age = int(age)
+        except ValueError:
+            flash("Age must be a valid number.", "error")
+            return redirect(url_for("patients"))
+
+        if age < 0 or age > 120:
+            flash("Age must be between 0 and 120.", "error")
+            return redirect(url_for("patients"))
+    else:
+        age = None
+
+    # Update only name, age, and contact.
+    updated = database.update_patient(
+        patient_id,
+        name,
+        age,
+        contact
+    )
+
+    if updated:
+        flash("Patient details updated successfully!", "success")
+    else:
+        flash("Unable to update patient.", "error")
+
+    return redirect(url_for("patients"))
+
+
+
+@app.route("/patients/<int:patient_id>/delete", methods=["POST"])
+def delete_patient(patient_id):
+
+    result = database.delete_patient(patient_id)
+
+    if result == "deleted":
+        flash("Patient deleted successfully!", "success")
+
+    elif result == "has_prescriptions":
+        flash(
+            "Cannot delete this patient because they have "
+            "existing prescriptions. Delete those prescriptions first.",
+            "error"
+        )
+
+    elif result == "not_found":
+        flash("Patient not found.", "error")
+
+    return redirect(url_for("patients"))
+
+
+
+
 @app.route("/prescriptions")
 def prescriptions():
 

@@ -416,3 +416,151 @@ button {
 .cancel-delete-btn:hover {
     background: #d1d5db;
 }
+
+
+
+
+/* Edit Patient Button */
+
+.edit-patient-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.edit-patient-btn:hover {
+    background: #1d4ed8;
+}
+
+/* Edit Patient Popup */
+
+.patient-modal-overlay[hidden] {
+    display: none;
+}
+
+.patient-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.patient-modal {
+    background: white;
+    padding: 28px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.patient-modal h2 {
+    margin-top: 0;
+}
+
+.patient-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.patient-cancel-btn {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.patient-save-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.patient-cancel-btn,
+.patient-save-btn {
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+
+
+/* Delete Patient Button */
+
+.delete-patient-btn,
+.confirm-patient-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.delete-patient-btn:hover,
+.confirm-patient-delete:hover {
+    background: #b02a37;
+}
+
+/* Delete Patient Popup */
+
+.delete-patient-overlay[hidden] {
+    display: none;
+}
+
+.delete-patient-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.delete-patient-modal {
+    background: white;
+    padding: 28px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.delete-patient-modal h2 {
+    margin-top: 0;
+}
+
+.delete-patient-warning {
+    color: #b42318;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.delete-patient-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.cancel-patient-delete {
+    background: #e5e7eb;
+    color: #111827;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}

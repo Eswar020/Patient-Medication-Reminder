@@ -126,127 +126,103 @@
             let currentReminder = null;
 
 
+            let reminderQueue = [];
+            let reminderCheckInProgress = false;
+
+            function showNextReminder() {
+
+                if (currentReminder || reminderQueue.length === 0) {
+                    return;
+                }
+
+                const reminder = reminderQueue.shift();
+                currentReminder = reminder;
+
+                if (reminder.reminder_type === "early") {
+
+                    document.getElementById("reminderTitle").textContent =
+                        "💊 Medication Due Soon";
+
+                    document.getElementById("reminderSecondButton").textContent =
+                        "⏰ Remind at Dose Time";
+
+                    if ("Notification" in window &&
+                        Notification.permission === "granted") {
+
+                        new Notification("💊 MedTrack Medication Reminder", {
+                            body: `${reminder.patient_name}, ${reminder.medicine_name} (${reminder.dosage}) is due soon.`
+                        });
+                    }
+
+                } else if (reminder.reminder_type === "dose_time") {
+
+                    document.getElementById("reminderTitle").textContent =
+                        "💊 Time To Take Your Medicine";
+
+                    document.getElementById("reminderSecondButton").textContent =
+                        "✕ Missed";
+
+                    if ("Notification" in window &&
+                        Notification.permission === "granted") {
+
+                        new Notification("💊 Time To Take Your Medicine", {
+                            body: `${reminder.patient_name}, it is time to take ${reminder.medicine_name} (${reminder.dosage}).`
+                        });
+                    }
+                }
+
+                document.getElementById("reminderPatient").textContent =
+                    reminder.patient_name;
+
+                document.getElementById("reminderMedicine").textContent =
+                    reminder.medicine_name;
+
+                document.getElementById("reminderDosage").textContent =
+                    reminder.dosage;
+
+                document.getElementById("reminderDoseTime").textContent =
+                    reminder.scheduled_datetime;
+
+                document.getElementById("reminderPopup").style.display = "flex";
+            }
+
+
+            
             async function checkMedicationReminders() {
+
+                if (reminderCheckInProgress) {
+                    return;
+                }
+
+                reminderCheckInProgress = true;
 
                 try {
 
                     const response = await fetch("/api/reminders");
+
+                    if (!response.ok) {
+                        throw new Error("Unable to fetch reminders");
+                    }
+
                     const reminders = await response.json();
 
-                    if (reminders.length === 0) {
-                        return;
-                    }
+                    // Store all returned reminders.
+                    reminderQueue.push(...reminders);
 
-                    const reminder = reminders[0];
+                    // Display the next reminder if none is open.
+                    showNextReminder();
 
-                    currentReminder = reminder;
+                } catch (error) {
 
+                    console.error("Reminder check failed:", error);
 
-                    // =====================================
-                    // EARLY REMINDER
-                    // =====================================
+                } finally {
 
-                    if (reminder.reminder_type === "early") {
-
-                        document.getElementById(
-                            "reminderTitle"
-                        ).textContent = "💊 Medication Due Soon";
-
-                        document.getElementById(
-                            "reminderSecondButton"
-                        ).textContent = "⏰ Remind at Dose Time";
-
-
-                        // Browser notification
-                        if (Notification.permission === "granted") {
-
-                            new Notification(
-                                "💊 MedTrack Medication Reminder",
-                                {
-                                    body:
-                                        `${reminder.patient_name}, ` +
-                                        `${reminder.medicine_name} ` +
-                                        `(${reminder.dosage}) is due soon.`
-                                }
-                            );
-
-                        }
-
-                    }
-
-
-                    // =====================================
-                    // DOSE-TIME REMINDER
-                    // =====================================
-
-                    else if (reminder.reminder_type === "dose_time") {
-
-                        document.getElementById(
-                            "reminderTitle"
-                        ).textContent = "💊 Time To Take Your Medicine";
-
-                        document.getElementById(
-                            "reminderSecondButton"
-                        ).textContent = "✕ Missed";
-
-
-                        // Browser notification
-                        if (Notification.permission === "granted") {
-
-                            new Notification(
-                                "💊 Time To Take Your Medicine",
-                                {
-                                    body:
-                                        `${reminder.patient_name}, ` +
-                                        `it is time to take ` +
-                                        `${reminder.medicine_name} ` +
-                                        `(${reminder.dosage}).`
-                                }
-                            );
-
-                        }
-
-                    }
-
-
-                    // =====================================
-                    // Fill popup information
-                    // =====================================
-
-                    document.getElementById(
-                        "reminderPatient"
-                    ).textContent = reminder.patient_name;
-
-                    document.getElementById(
-                        "reminderMedicine"
-                    ).textContent = reminder.medicine_name;
-
-                    document.getElementById(
-                        "reminderDosage"
-                    ).textContent = reminder.dosage;
-
-                    document.getElementById(
-                        "reminderDoseTime"
-                    ).textContent = reminder.scheduled_datetime;
-
-
-                    // Show popup
-                    document.getElementById(
-                        "reminderPopup"
-                    ).style.display = "flex";
+                    reminderCheckInProgress = false;
 
                 }
-
-                catch (error) {
-
-                    console.error(
-                        "Reminder check failed:",
-                        error
-                    );
-
-                }
-
             }
+
 
 
             // =====================================
@@ -272,6 +248,7 @@
                     ).style.display = "none";
 
                     currentReminder = null;
+                    showNextReminder();
 
                 });
 
@@ -298,6 +275,7 @@
                         ).style.display = "none";
 
                         currentReminder = null;
+                        showNextReminder();
 
                         return;
                     }
@@ -319,6 +297,7 @@
                         ).style.display = "none";
 
                         currentReminder = null;
+                        showNextReminder();
 
                     }
 

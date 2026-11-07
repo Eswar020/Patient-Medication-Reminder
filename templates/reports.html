@@ -1,163 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+    <head>
 
-    <meta charset="UTF-8">
+        <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1.0">
 
-    <title>Weekly Report - MedTrack</title>
+        <title>Weekly Report - MedTrack</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}">
 
-</head>
-
-
-<body>
+    </head>
 
 
-<header>
-
-    <h2>💊 MedTrack</h2>
-
-    <nav>
-
-        <a href="/">Dashboard</a>
-
-        <a href="/patients">Patients</a>
-
-        <a href="/prescriptions">Prescriptions</a>
-
-        <a href="/schedule">Schedule</a>
-
-        <a href="/medication-log">Medication Log</a>
-
-        <a href="/reports">Reports</a>
-
-    </nav>
-
-</header>
+    <body>
 
 
-<main>
+        <header>
 
-    <h1>Weekly Adherence Report</h1>
+            <h2>💊 MedTrack</h2>
 
-    <p>
-        Medication adherence summary for the last 7 days.
-    </p>
+            <nav>
 
+                <a href="/">Dashboard</a>
 
-    {% if reports %}
+                <a href="/patients">Patients</a>
 
+                <a href="/prescriptions">Prescriptions</a>
 
-        {% for report in reports %}
+                <a href="/schedule">Schedule</a>
 
+                <a href="/medication-log">Medication Log</a>
 
-        <div class="report-card">
+                <a href="/reports">Reports</a>
 
+            </nav>
 
-            <h2>
-                👤 {{ report["patient_name"] }}
-            </h2>
-
-
-            <div class="adherence-score">
-
-                {{ report["adherence"] }}%
-
-            </div>
+        </header>
 
 
-            <p class="adherence-label">
-                Medication Adherence
-            </p>
 
+        <main class="reports-page">
 
-            <div class="report-stats">
-
-
-                <div class="report-stat">
-
-                    <h3>
-                        {{ report["total_doses"] }}
-                    </h3>
-
-                    <p>
-                        Total Doses
-                    </p>
-
-                </div>
-
-
-                <div class="report-stat">
-
-                    <h3>
-                        {{ report["taken_doses"] }}
-                    </h3>
-
-                    <p>
-                        Taken
-                    </p>
-
-                </div>
-
-
-                <div class="report-stat">
-
-                    <h3>
-                        {{ report["missed_doses"] }}
-                    </h3>
-
-                    <p>
-                        Missed
-                    </p>
-
-                </div>
-
-
-            </div>
-
-
-            <div class="progress-container">
-                <div class="progress-bar"
-                    style="--progress-width: {{ report.adherence }}%;">
+            <div class="reports-heading">
+                <div>
+                    <span class="reports-eyebrow">MEDTRACK / ANALYTICS</span>
+                    <h1>Weekly Adherence Report</h1>
+                    <p>Medication adherence summary for the last 7 days.</p>
                 </div>
             </div>
 
+            {% if reports %}
 
-        </div>
+            <!-- Patient Filter -->
+            <div class="reports-toolbar">
+
+                <div class="reports-filter-group">
+                    <label for="reportPatientFilter">
+                        Search by Patient
+                    </label>
+
+                    <select id="reportPatientFilter"
+                            onchange="filterReports()">
+
+                        <option value="all">All Patients</option>
+
+                        {% for report in reports
+                            | unique(attribute='patient_name')
+                            | sort(attribute='patient_name') %}
+
+                        <option value="{{ report['patient_name'] }}">
+                            {{ report["patient_name"] }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+                </div>
+
+                <div class="reports-result-count">
+                    <span id="reportVisibleCount">0</span>
+                    patient reports
+                </div>
+
+            </div>
+
+            <!-- Report Cards -->
+            <div class="reports-grid">
+
+                {% for report in reports %}
+
+                <article class="report-card report-modern-card"
+                        data-patient="{{ report['patient_name'] }}">
+
+                    <div class="report-modern-header">
+                        <div class="report-patient-info">
+                            <span class="report-patient-icon">👤</span>
+
+                            <div>
+                                <h2>{{ report["patient_name"] }}</h2>
+                                <span class="report-period">Last 7 days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adherence Percentage -->
+                    <div class="report-score-section">
+
+                        <div class="adherence-score">
+                            {{ report["adherence"] }}%
+                        </div>
+
+                        <p class="adherence-label">
+                            Medication Adherence
+                        </p>
+
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div class="progress-bar"
+                            style="--progress-width: {{ report['adherence'] }}%;">
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="report-stats">
+
+                        <div class="report-stat">
+                            <h3>{{ report["total_doses"] }}</h3>
+                            <p>Total Doses</p>
+                        </div>
+
+                        <div class="report-stat">
+                            <h3>{{ report["taken_doses"] }}</h3>
+                            <p>Taken</p>
+                        </div>
+
+                        <div class="report-stat">
+                            <h3>{{ report["missed_doses"] }}</h3>
+                            <p>Missed</p>
+                        </div>
+
+                    </div>
+
+                </article>
+
+                {% endfor %}
+
+            </div>
+
+            <div id="reportNoResults" class="report-empty-state" hidden>
+                No reports match the selected patient.
+            </div>
+
+            {% else %}
+
+            <div class="report-empty-state">
+                <h3>No adherence data available</h3>
+                <p>
+                    Mark medication doses as Taken or Missed
+                    to generate a weekly report.
+                </p>
+            </div>
+
+            {% endif %}
+
+        </main>
 
 
-        {% endfor %}
+
+        <script>
+        function filterReports() {
+            const filter = document.getElementById("reportPatientFilter");
+            if (!filter) return;
+
+            const selectedPatient = filter.value;
+
+            const cards = document.querySelectorAll(
+                ".report-modern-card"
+            );
+
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const matches =
+                    selectedPatient === "all" ||
+                    card.dataset.patient === selectedPatient;
+
+                card.hidden = !matches;
+
+                if (matches) {
+                    visibleCount++;
+                }
+            });
+
+            document.getElementById(
+                "reportVisibleCount"
+            ).textContent = visibleCount;
+
+            document.getElementById(
+                "reportNoResults"
+            ).hidden = visibleCount !== 0;
+        }
+
+        document.addEventListener("DOMContentLoaded", filterReports);
+        </script>
 
 
-    {% else %}
 
-
-        <div class="report-card">
-
-            <h3>
-                No adherence data available.
-            </h3>
-
-            <p>
-                Mark medication doses as Taken or Missed
-                to generate a weekly report.
-            </p>
-
-        </div>
-
-
-    {% endif %}
-
-
-</main>
-
-
-</body>
+    </body>
 
 </html>

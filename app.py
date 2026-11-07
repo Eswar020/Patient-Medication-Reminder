@@ -50,22 +50,50 @@ def patients():
     )
 
 
+
 @app.route("/patients/add", methods=["POST"])
 def add_patient():
 
-    name = request.form.get("name")
-    age = request.form.get("age")
-    contact = request.form.get("contact")
-    timezone = request.form.get("timezone")
+    name = request.form.get("name", "").strip()
+    age = request.form.get("age", "").strip()
+    contact = request.form.get("contact", "").strip()
+    timezone = request.form.get("timezone", "Asia/Kolkata")
+    gender = request.form.get("gender", "").strip()
+
+    allowed_genders = (
+        "Male",
+        "Female",
+        "Other",
+        "Prefer not to say"
+    )
 
     if not name:
-        return "Patient name is required.", 400
+        flash("Patient name is required.", "error")
+        return redirect(url_for("patients"))
+
+    if gender not in allowed_genders:
+        flash("Please select a valid gender.", "error")
+        return redirect(url_for("patients"))
+
+    if age:
+        try:
+            age = int(age)
+        except ValueError:
+            flash("Age must be a valid number.", "error")
+            return redirect(url_for("patients"))
+
+        if age < 1 or age > 120:
+            flash("Age must be between 1 and 120.", "error")
+            return redirect(url_for("patients"))
+    else:
+        age = None
 
     database.add_patient(
         name,
         age,
         contact,
-        timezone
+        timezone,
+        gender
     )
 
     flash("Patient added successfully!", "success")
@@ -74,27 +102,37 @@ def add_patient():
 
 
 
+
+
 @app.route("/patients/<int:patient_id>/update", methods=["POST"])
 def update_patient(patient_id):
 
-    # Check whether the patient exists.
     patient = database.get_patient_by_id(patient_id)
 
     if patient is None:
         flash("Patient not found.", "error")
         return redirect(url_for("patients"))
 
-    # Get updated patient information.
     name = request.form.get("name", "").strip()
     age = request.form.get("age", "").strip()
     contact = request.form.get("contact", "").strip()
+    gender = request.form.get("gender", "").strip()
 
-    # Validate patient name.
+    allowed_genders = (
+        "Male",
+        "Female",
+        "Other",
+        "Prefer not to say"
+    )
+
     if not name:
         flash("Patient name is required.", "error")
         return redirect(url_for("patients"))
 
-    # Validate age if provided.
+    if gender not in allowed_genders:
+        flash("Please select a valid gender.", "error")
+        return redirect(url_for("patients"))
+
     if age:
         try:
             age = int(age)
@@ -102,18 +140,18 @@ def update_patient(patient_id):
             flash("Age must be a valid number.", "error")
             return redirect(url_for("patients"))
 
-        if age < 0 or age > 120:
-            flash("Age must be between 0 and 120.", "error")
+        if age < 1 or age > 120:
+            flash("Age must be between 1 and 120.", "error")
             return redirect(url_for("patients"))
     else:
         age = None
 
-    # Update only name, age, and contact.
     updated = database.update_patient(
         patient_id,
         name,
         age,
-        contact
+        contact,
+        gender
     )
 
     if updated:
@@ -122,6 +160,7 @@ def update_patient(patient_id):
         flash("Unable to update patient.", "error")
 
     return redirect(url_for("patients"))
+
 
 
 

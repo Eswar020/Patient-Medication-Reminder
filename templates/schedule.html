@@ -16,167 +16,280 @@
 </head>
 
 
-<body>
+    <body>
 
 
-<header>
+        <header>
 
-    <h2>💊 MedTrack</h2>
+            <h2>💊 MedTrack</h2>
 
-    <nav>
+            <nav>
 
-        <a href="/">Dashboard</a>
+                <a href="/">Dashboard</a>
 
-        <a href="/patients">Patients</a>
+                <a href="/patients">Patients</a>
 
-        <a href="/prescriptions">Prescriptions</a>
+                <a href="/prescriptions">Prescriptions</a>
 
-        <a href="/schedule">Schedule</a>
+                <a href="/schedule">Schedule</a>
 
-        <a href="/medication-log">Medication Log</a>
+                <a href="/medication-log">Medication Log</a>
 
-        <a href="/reports">Reports</a>
+                <a href="/reports">Reports</a>
 
-    </nav>
+            </nav>
 
-</header>
+        </header>
 
 
-<main>
+        <main>
 
-    <h1>Medication Schedule</h1>
+            <h1>Medication Schedule</h1>
 
-    <p>
-        View all scheduled medication doses.
-    </p>
+            <p>
+                View all scheduled medication doses.
+            </p>
 
 
-    {% if schedule %}
+            <!-- Schedule Filters -->
+            <div class="schedule-filter-bar">
 
-    <table class="schedule-table">
+                <div class="schedule-filter-group">
+                    <label for="schedulePatientFilter">
+                        Search by Patient
+                    </label>
 
-        <thead>
+                    <select id="schedulePatientFilter"
+                            onchange="filterSchedule()">
 
-            <tr>
+                        <option value="all">All Patients</option>
 
-                <th>Patient</th>
+                        {% for dose in schedule
+                            | unique(attribute='patient_name')
+                            | sort(attribute='patient_name') %}
 
-                <th>Medicine</th>
+                            <option value="{{ dose['patient_name'] }}">
+                                {{ dose['patient_name'] }}
+                            </option>
 
-                <th>Dosage</th>
+                        {% endfor %}
 
-                <th>Date & Time</th>
+                    </select>
+                </div>
 
-                <th>Status</th>
-                <th>Reminder Time</th>
-                <th>Action</th>
+                <div class="schedule-filter-group">
+                    <label for="scheduleStatusFilter">
+                        Filter by Status
+                    </label>
 
-            </tr>
+                    <select id="scheduleStatusFilter"
+                            onchange="filterSchedule()">
 
-        </thead>
+                        <option value="all">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Taken">Taken</option>
+                        <option value="Missed">Missed</option>
 
+                    </select>
+                </div>
 
-        <tbody>
+                <div class="schedule-filter-count">
+                    <span id="scheduleVisibleCount">0</span>
+                    doses shown
+                </div>
 
+            </div>
 
-        {% for dose in schedule %}
 
 
-            <tr>
+            {% if schedule %}
 
-                <td>
-                    {{ dose["patient_name"] }}
-                </td>
+            <table class="schedule-table">
 
-                <td>
-                    {{ dose["medicine_name"] }}
-                </td>
+                <thead>
 
-                <td>
-                    {{ dose["dosage"] }}
-                </td>
+                    <tr>
 
-                <td>
-                    {{ dose["scheduled_datetime"] }}
-                </td>
+                        <th>Patient</th>
 
-                <td>
-                    {{ dose["status"] }}
-                </td>
+                        <th>Medicine</th>
 
-                <td>{{ dose['reminder_datetime'] }}</td>
+                        <th>Dosage</th>
 
-                <td>
+                        <th>Date & Time</th>
 
-                    {% if dose["status"] == "Pending" %}
+                        <th>Status</th>
+                        <th>Reminder Time</th>
+                        <th>Action</th>
 
-                        <div class="dose-actions">
+                    </tr>
 
-                            <form
-                                action="/schedule/{{ dose['schedule_id'] }}/taken"
-                                method="POST">
+                </thead>
 
-                                <button
-                                    type="submit"
-                                    class="taken-button">
 
-                                    ✓ Taken
+                <tbody>
 
-                                </button>
 
-                            </form>
+                {% for dose in schedule %}
 
 
-                            <form
-                                action="/schedule/{{ dose['schedule_id'] }}/missed"
-                                method="POST">
+                    <tr class="schedule-dose-row"
+                        data-patient="{{ dose['patient_name'] }}"
+                        data-status="{{ dose['status'] }}">>
 
-                                <button
-                                    type="submit"
-                                    class="missed-button">
+                        <td>
+                            {{ dose["patient_name"] }}
+                        </td>
 
-                                    ✕ Missed
+                        <td>
+                            {{ dose["medicine_name"] }}
+                        </td>
 
-                                </button>
+                        <td>
+                            {{ dose["dosage"] }}
+                        </td>
 
-                            </form>
+                        <td>
+                            {{ dose["scheduled_datetime"] }}
+                        </td>
 
-                        </div>
+                        
+                        <td>
+                            <span class="dose-status-badge
+                                {% if dose['status'] == 'Taken' %}status-taken
+                                {% elif dose['status'] == 'Missed' %}status-missed
+                                {% else %}status-pending{% endif %}">
+                                {{ dose["status"] }}
+                            </span>
+                        </td>
 
 
-                    {% else %}
+                        <td>{{ dose['reminder_datetime'] }}</td>
 
-                        —
+                        <td>
 
-                    {% endif %}
+                            {% if dose["status"] == "Pending" %}
 
-                </td>
+                                <div class="dose-actions">
 
-            </tr>
+                                    <form
+                                        action="/schedule/{{ dose['schedule_id'] }}/taken"
+                                        method="POST">
 
+                                        <button
+                                            type="submit"
+                                            class="taken-button">
 
-        {% endfor %}
+                                            ✓ Taken
 
+                                        </button>
 
-        </tbody>
+                                    </form>
 
-    </table>
 
+                                    <form
+                                        action="/schedule/{{ dose['schedule_id'] }}/missed"
+                                        method="POST">
 
-    {% else %}
+                                        <button
+                                            type="submit"
+                                            class="missed-button">
 
+                                            ✕ Missed
 
-        <p>
-            No medication doses have been scheduled yet.
-        </p>
+                                        </button>
 
+                                    </form>
 
-    {% endif %}
+                                </div>
 
 
-</main>
+                            {% else %}
 
+                                —
 
-</body>
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+
+                {% endfor %}
+
+
+                </tbody>
+
+            </table>
+
+            <p id="scheduleNoResults" hidden>
+                No medication doses match the selected filters.
+            </p>
+
+
+            {% else %}
+
+
+                <p>
+                    No medication doses have been scheduled yet.
+                </p>
+
+
+            {% endif %}
+
+
+        </main>
+
+
+        <script>
+        function filterSchedule() {
+            const selectedPatient =
+                document.getElementById("schedulePatientFilter").value;
+
+            const selectedStatus =
+                document.getElementById("scheduleStatusFilter").value;
+
+            const rows = document.querySelectorAll(
+                ".schedule-dose-row"
+            );
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const matchesPatient =
+                    selectedPatient === "all" ||
+                    row.dataset.patient === selectedPatient;
+
+                const matchesStatus =
+                    selectedStatus === "all" ||
+                    row.dataset.status === selectedStatus;
+
+                const shouldShow = matchesPatient && matchesStatus;
+
+                row.hidden = !shouldShow;
+                row.style.display = shouldShow ? "" : "none";
+
+                if (shouldShow) {
+                    visibleCount++;
+                }
+            });
+
+            document.getElementById(
+                "scheduleVisibleCount"
+            ).textContent = visibleCount;
+
+            const emptyMessage =
+                document.getElementById("scheduleNoResults");
+
+            if (emptyMessage) {
+                emptyMessage.hidden = visibleCount !== 0;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", filterSchedule);
+        </script>
+
+
+    </body>
 
 </html>

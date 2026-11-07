@@ -42,9 +42,11 @@
     <p>Add and manage patients.</p>
 
 
-    <!-- ADD PATIENT FORM -->
+    <!-- ADD PATIENT FORM + INFORMATION PANEL -->
 
-    <div class="form-card">
+    <div class="patient-page-layout">
+
+        <div class="form-card">
 
         <h2>Add Patient</h2>
 
@@ -69,6 +71,18 @@
                 min="1"
                 max="120"
             >
+
+
+            <label for="patientGender">Gender</label>
+
+            <select id="patientGender" name="gender" required>
+                <option value="" disabled selected>Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+
 
 
             <label>Contact</label>
@@ -107,9 +121,67 @@
                 Add Patient
             </button>
 
+        
         </form>
 
     </div>
+
+        <!-- PATIENT INFORMATION PANEL -->
+
+        <aside class="patient-info-panel">
+
+            <div class="info-panel-icon">♡</div>
+
+            <span class="info-panel-tag">
+                PATIENT CARE
+            </span>
+
+            <h2>Better care starts here.</h2>
+
+            <p>
+                Keep your patient information organized,
+                manage medications easily, and stay on
+                top of every scheduled dose.
+            </p>
+
+            <div class="info-panel-divider"></div>
+
+            <h3>Everything in one place</h3>
+
+            <div class="info-feature">
+                <span>✓</span>
+                <div>
+                    <strong>Patient Management</strong>
+                    <p>Maintain accurate patient records.</p>
+                </div>
+            </div>
+
+            <div class="info-feature">
+                <span>✓</span>
+                <div>
+                    <strong>Medication Scheduling</strong>
+                    <p>Organize prescriptions and dose times.</p>
+                </div>
+            </div>
+
+            <div class="info-feature">
+                <span>✓</span>
+                <div>
+                    <strong>Adherence Tracking</strong>
+                    <p>Monitor taken and missed medications.</p>
+                </div>
+            </div>
+
+            <div class="info-panel-footer">
+                💊 MedTrack — Care made simple.
+            </div>
+
+        </aside>
+
+    </div>
+
+
+
 
 
     <!-- PATIENT LIST -->
@@ -138,6 +210,13 @@
                         {{ patient["age"] or "Not provided" }}
                     </p>
 
+
+                    <p>
+                        Gender:
+                        {{ patient["gender"] or "Not specified" }}
+                    </p>
+
+
                     <p>
                         Contact:
                         {{ patient["contact"] or "Not provided" }}
@@ -153,12 +232,15 @@
                     <button
                         type="button"
                         class="edit-patient-btn"
+                        
                         data-patient='{{ {
                             "patient_id": patient["patient_id"],
                             "name": patient["name"],
                             "age": patient["age"],
-                            "contact": patient["contact"]
+                            "contact": patient["contact"],
+                            "gender": patient["gender"]
                         } | tojson | forceescape }}'
+
                         onclick="openEditPatientModal(this)">
                         Edit
                     </button>
@@ -267,6 +349,26 @@
                 max="120"
             >
 
+
+            <label for="editPatientGender">Gender</label>
+
+            <select
+                id="editPatientGender"
+                name="gender"
+                required
+            >
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">
+                    Prefer not to say
+                </option>
+            </select>
+
+
+
+
             <label for="editPatientContact">Contact Number</label>
             <input
                 type="text"
@@ -333,6 +435,11 @@
 
         document.getElementById("editPatientAge").value =
             patient.age ?? "";
+
+        
+        document.getElementById("editPatientGender").value =
+            patient.gender ?? "";
+
 
         document.getElementById("editPatientContact").value =
             patient.contact ?? "";

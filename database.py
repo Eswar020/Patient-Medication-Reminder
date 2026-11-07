@@ -18,6 +18,7 @@ def create_tables():
             name TEXT NOT NULL,
             age INTEGER,
             contact TEXT,
+            gender TEXT,
             timezone TEXT NOT NULL DEFAULT 'Asia/Kolkata'
         )
     """)
@@ -25,6 +26,7 @@ def create_tables():
     connection.commit()
     connection.close()
 
+    add_patient_gender_column()
 
     create_prescription_table()
     add_reminder_column()
@@ -36,17 +38,58 @@ def create_tables():
 
 
 
-
-def add_patient(name, age, contact, timezone):
+def add_patient_gender_column():
     connection = get_connection()
 
-    connection.execute("""
-        INSERT INTO patients (name, age, contact, timezone)
-        VALUES (?, ?, ?, ?)
-    """, (name, age, contact, timezone))
+    try:
+        columns = connection.execute(
+            "PRAGMA table_info(patients)"
+        ).fetchall()
 
-    connection.commit()
-    connection.close()
+        column_names = [column["name"] for column in columns]
+
+        if "gender" not in column_names:
+            connection.execute("""
+                ALTER TABLE patients
+                ADD COLUMN gender TEXT
+            """)
+
+        connection.commit()
+
+    finally:
+        connection.close()
+
+
+
+
+
+
+def add_patient(name, age, contact, timezone, gender):
+    connection = get_connection()
+
+    try:
+        connection.execute("""
+            INSERT INTO patients (
+                name,
+                age,
+                contact,
+                timezone,
+                gender
+            )
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            name,
+            age,
+            contact,
+            timezone,
+            gender
+        ))
+
+        connection.commit()
+
+    finally:
+        connection.close()
+
 
 
 def get_all_patients():
@@ -63,23 +106,31 @@ def get_all_patients():
 
 
 
-def get_patient_by_id(patient_id):
 
+def get_patient_by_id(patient_id):
     connection = get_connection()
 
-    patient = connection.execute("""
-        SELECT patient_id, name, age, contact
-        FROM patients
-        WHERE patient_id = ?
-    """, (patient_id,)).fetchone()
+    try:
+        patient = connection.execute("""
+            SELECT
+                patient_id,
+                name,
+                age,
+                contact,
+                gender
+            FROM patients
+            WHERE patient_id = ?
+        """, (patient_id,)).fetchone()
 
-    connection.close()
+        return patient
 
-    return patient
+    finally:
+        connection.close()
 
 
-def update_patient(patient_id, name, age, contact):
 
+
+def update_patient(patient_id, name, age, contact, gender):
     connection = get_connection()
 
     try:
@@ -87,17 +138,18 @@ def update_patient(patient_id, name, age, contact):
             UPDATE patients
             SET name = ?,
                 age = ?,
-                contact = ?
+                contact = ?,
+                gender = ?
             WHERE patient_id = ?
         """, (
             name,
             age,
             contact,
+            gender,
             patient_id
         ))
 
         connection.commit()
-
         return cursor.rowcount > 0
 
     except Exception:
@@ -106,6 +158,7 @@ def update_patient(patient_id, name, age, contact):
 
     finally:
         connection.close()
+
 
 
 

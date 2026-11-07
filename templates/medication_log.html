@@ -51,6 +51,72 @@
     </p>
 
 
+    <!-- Medication Log Filters -->
+    <div class="schedule-filter-bar medication-log-filters">
+
+        <div class="schedule-filter-group">
+            <label for="logPatientFilter">
+                Search by Patient
+            </label>
+
+            <select id="logPatientFilter"
+                    onchange="filterMedicationLogs()">
+
+                <option value="all">All Patients</option>
+
+                {% for log in logs
+                    | unique(attribute='patient_name')
+                    | sort(attribute='patient_name') %}
+
+                    <option value="{{ log['patient_name'] }}">
+                        {{ log['patient_name'] }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+        <div class="schedule-filter-group">
+            <label for="logStatusFilter">
+                Filter by Status
+            </label>
+
+            <select id="logStatusFilter"
+                    onchange="filterMedicationLogs()">
+
+                <option value="all">All Statuses</option>
+                <option value="Taken">Taken</option>
+                <option value="Missed">Missed</option>
+
+            </select>
+        </div>
+
+        <div class="schedule-filter-group">
+            <label for="logDateFilter">
+                Scheduled Date
+            </label>
+
+            <input type="date"
+                id="logDateFilter"
+                onchange="filterMedicationLogs()">
+        </div>
+
+        <div class="schedule-filter-count">
+            <span id="logVisibleCount">0</span>
+            records shown
+        </div>
+
+        <button type="button"
+                class="log-clear-filters"
+                onclick="clearMedicationLogFilters()">
+            Clear Filters
+        </button>
+
+    </div>
+
+
+
     {% if logs %}
 
 
@@ -83,7 +149,11 @@
         {% for log in logs %}
 
 
-            <tr>
+            <tr class="medication-log-row"
+                data-patient="{{ log['patient_name'] }}"
+                data-status="{{ log['status'] }}"
+                data-date="{{ log['scheduled_datetime'][:10] }}">>
+
 
                 <td>
                     {{ log["patient_name"] }}
@@ -101,9 +171,16 @@
                     {{ log["scheduled_datetime"] }}
                 </td>
 
+                
                 <td>
-                    {{ log["status"] }}
+                    <span class="dose-status-badge
+                        {% if log['status'] == 'Taken' %}status-taken
+                        {% elif log['status'] == 'Missed' %}status-missed
+                        {% else %}status-pending{% endif %}">
+                        {{ log["status"] }}
+                    </span>
                 </td>
+
 
                 <td>
 
@@ -129,6 +206,10 @@
 
     </table>
 
+    <p id="logNoResults" hidden>
+        No medication records match the selected filters.
+    </p>
+
 
     {% else %}
 
@@ -142,6 +223,85 @@
 
 
 </main>
+
+
+<script>
+function filterMedicationLogs() {
+    const selectedPatient =
+        document.getElementById("logPatientFilter").value;
+
+    const selectedStatus =
+        document.getElementById("logStatusFilter").value;
+
+    const selectedDate =
+        document.getElementById("logDateFilter").value;
+
+    const rows = document.querySelectorAll(
+        ".medication-log-row"
+    );
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const matchesPatient =
+            selectedPatient === "all" ||
+            row.dataset.patient === selectedPatient;
+
+        const matchesStatus =
+            selectedStatus === "all" ||
+            row.dataset.status === selectedStatus;
+
+        const matchesDate =
+            !selectedDate ||
+            row.dataset.date === selectedDate;
+
+        const shouldShow =
+            matchesPatient &&
+            matchesStatus &&
+            matchesDate;
+
+        row.hidden = !shouldShow;
+        row.style.display = shouldShow ? "" : "none";
+
+        if (shouldShow) {
+            visibleCount++;
+        }
+    });
+
+    document.getElementById(
+        "logVisibleCount"
+    ).textContent = visibleCount;
+
+    const emptyMessage =
+        document.getElementById("logNoResults");
+
+    if (emptyMessage) {
+        emptyMessage.hidden = visibleCount !== 0;
+    }
+}
+
+function clearMedicationLogFilters() {
+    document.getElementById(
+        "logPatientFilter"
+    ).value = "all";
+
+    document.getElementById(
+        "logStatusFilter"
+    ).value = "all";
+
+    document.getElementById(
+        "logDateFilter"
+    ).value = "";
+
+    filterMedicationLogs();
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    filterMedicationLogs
+);
+</script>
+
 
 
 </body>

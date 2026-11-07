@@ -13,6 +13,8 @@
 
     <body>
 
+        
+
         <header>
             <h2>💊 MedTrack</h2>
 
@@ -26,44 +28,133 @@
             </nav>
         </header>
 
-        <main>
+        
+        <main class="dashboard-main">
 
-            <h1>Patient Medication Reminder</h1>
+        <!-- Welcome Banner -->
+        <section class="dashboard-hero">
+            <div class="hero-content">
+            <span class="hero-label">MEDTRACK HEALTHCARE</span>
+
+            <h1>Better care, one dose at a time.</h1>
 
             <p>
-                Manage prescriptions, medication reminders,
-                adherence logs and weekly reports.
+                Manage patient medications, stay on top of
+                reminders, and track adherence effortlessly.
             </p>
 
-            
-            <section class="cards">
+            <div class="hero-actions">
+                <a href="/prescriptions" class="hero-primary">
+                + Add Prescription
+                </a>
 
-                <div class="card">
-                    <h3>Active Prescriptions</h3>
-                    <h2>{{ stats.medicines }}</h2>
-                </div>
+                <a href="/schedule" class="hero-secondary">
+                View Schedule →
+                </a>
+            </div>
+            </div>
 
-                <div class="card">
-                    <h3>Today's Doses</h3>
-                    <h2>{{ stats.todays_doses }}</h2>
-                </div>
+            <div class="hero-decoration" aria-hidden="true">
+            <span>✚</span>
+            <span>✚</span>
+            <span>✚</span>
+            </div>
+        </section>
 
-                <div class="card">
-                    <h3>Taken Today</h3>
-                    <h2>{{ stats.taken }}</h2>
-                </div>
+        <!-- Statistics -->
+        <section class="dashboard-section">
+            <div class="section-heading">
+            <div>
+                <span class="section-eyebrow">OVERVIEW</span>
+                <h2>Today's Summary</h2>
+            </div>
+            <span class="section-subtitle">
+                Your medication activity at a glance
+            </span>
+            </div>
 
-                <div class="card">
-                    <h3>Missed Today</h3>
-                    <h2>{{ stats.missed }}</h2>
-                </div>
+            <div class="cards dashboard-stats">
+            <div class="card">
+                <div class="stat-icon">💊</div>
+                <h3>Active Prescriptions</h3>
+                <h2>{{ stats.medicines }}</h2>
+                <p>Medication records</p>
+            </div>
 
-            </section>
+            <div class="card">
+                <div class="stat-icon">📅</div>
+                <h3>Today's Doses</h3>
+                <h2>{{ stats.todays_doses }}</h2>
+                <p>Scheduled for today</p>
+            </div>
 
+            <div class="card">
+                <div class="stat-icon">✓</div>
+                <h3>Taken Today</h3>
+                <h2>{{ stats.taken }}</h2>
+                <p>Successfully completed</p>
+            </div>
 
-            <button>Add Prescription</button>
+            <div class="card">
+                <div class="stat-icon">⏰</div>
+                <h3>Missed Today</h3>
+                <h2>{{ stats.missed }}</h2>
+                <p>Requires attention</p>
+            </div>
+            </div>
+        </section>
+
+        <!-- Quick Access -->
+        <section class="dashboard-section">
+            <div class="section-heading">
+            <div>
+                <span class="section-eyebrow">EXPLORE</span>
+                <h2>Quick Access</h2>
+            </div>
+            </div>
+
+            <div class="quick-access-grid">
+
+            <a href="/patients" class="quick-access-card">
+                <span class="quick-icon">👥</span>
+                <h3>Patients</h3>
+                <p>Manage patient information</p>
+                <span class="quick-arrow">↗</span>
+            </a>
+
+            <a href="/prescriptions" class="quick-access-card">
+                <span class="quick-icon">💊</span>
+                <h3>Prescriptions</h3>
+                <p>Add and manage medications</p>
+                <span class="quick-arrow">↗</span>
+            </a>
+
+            <a href="/schedule" class="quick-access-card">
+                <span class="quick-icon">📆</span>
+                <h3>Schedule</h3>
+                <p>View upcoming medication doses</p>
+                <span class="quick-arrow">↗</span>
+            </a>
+
+            <a href="/medication-log" class="quick-access-card">
+                <span class="quick-icon">📋</span>
+                <h3>Medication Log</h3>
+                <p>Review taken and missed doses</p>
+                <span class="quick-arrow">↗</span>
+            </a>
+
+            <a href="/reports" class="quick-access-card">
+                <span class="quick-icon">📊</span>
+                <h3>Reports</h3>
+                <p>Analyze medication adherence</p>
+                <span class="quick-arrow">↗</span>
+            </a>
+
+            </div>
+        </section>
 
         </main>
+
 
 
         <!-- Medication Reminder Popup -->

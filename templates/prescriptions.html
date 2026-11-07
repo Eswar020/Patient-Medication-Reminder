@@ -49,6 +49,8 @@
                 Add and manage patient medication prescriptions.
             </p>
 
+            <div class="prescription-page-layout">
+
 
             <div class="form-card">
 
@@ -126,31 +128,87 @@
                     </select>
 
 
-                    <label>Start Date</label>
+                    
+                    <label for="addStartDateDisplay">Start Date</label>
 
-                    <input
-                        type="date"
-                        name="start_date"
-                        required
-                    >
+                    <div class="date-input-wrapper">
+                        <input
+                            type="text"
+                            id="addStartDateDisplay"
+                            class="date-display"
+                            placeholder="Select start date"
+                            readonly
+                            onclick="openDatePicker('addStartDate')"
+                        >
 
+                        <button type="button"
+                                class="date-trigger"
+                                onclick="openDatePicker('addStartDate')"
+                                aria-label="Choose start date">
+                            📅
+                        </button>
+                    </div>
 
-                    <label>End Date</label>
+                    <input type="hidden"
+                        id="addStartDate"
+                        name="start_date">
 
-                    <input
-                        type="date"
+                    <label for="addEndDateDisplay">End Date</label>
+
+                    <div class="date-input-wrapper">
+                        <input
+                            type="text"
+                            id="addEndDateDisplay"
+                            class="date-display"
+                            placeholder="Select end date"
+                            readonly
+                            onclick="openDatePicker('addEndDate')"
+                        >
+
+                        <button type="button"
+                                class="date-trigger"
+                                onclick="openDatePicker('addEndDate')"
+                                aria-label="Choose end date">
+                            📅
+                        </button>
+                    </div>
+
+                    <input type="hidden"
+                        id="addEndDate"
                         name="end_date"
-                        required
                     >
 
 
-                    <label>Starting Time</label>
+
+                    
+                    <label for="addStartTimeDisplay">Starting Time</label>
+
+                    <div class="clock-input-wrapper">
+                        <input
+                            type="text"
+                            id="addStartTimeDisplay"
+                            class="clock-display"
+                            placeholder="Select time"
+                            readonly
+                            required
+                            onclick="openClockPicker('addStartTime')"
+                        >
+
+                        <button
+                            type="button"
+                            class="clock-trigger"
+                            onclick="openClockPicker('addStartTime')"
+                            aria-label="Choose starting time">
+                            ◷
+                        </button>
+                    </div>
 
                     <input
-                        type="time"
+                        type="hidden"
+                        id="addStartTime"
                         name="start_time"
-                        required
                     >
+
 
 
                     <label for="reminder_minutes">Reminder Before Dose</label>
@@ -186,7 +244,96 @@
             </div>
 
 
-            <h2>Prescription List</h2>
+            <!-- Right-side Medication Guide -->
+            <aside class="prescription-info-panel">
+
+                <div class="prescription-panel-icon">💊</div>
+
+                <span class="prescription-panel-label">
+                    MEDICATION MANAGEMENT
+                </span>
+
+                <h2>Smarter medication care.</h2>
+
+                <p class="prescription-panel-description">
+                    Create medication schedules, set timely reminders,
+                    and keep every patient's treatment organized.
+                </p>
+
+                <div class="prescription-panel-divider"></div>
+
+                <h3>How MedTrack helps</h3>
+
+                <div class="prescription-feature">
+                    <span class="prescription-feature-icon">📅</span>
+                    <div>
+                        <h4>Medication Scheduling</h4>
+                        <p>
+                            Automatically generate daily or
+                            interval-based medication schedules.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="prescription-feature">
+                    <span class="prescription-feature-icon">🔔</span>
+                    <div>
+                        <h4>Timely Reminders</h4>
+                        <p>
+                            Set reminders 5, 10, or 15 minutes
+                            before a scheduled dose.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="prescription-feature">
+                    <span class="prescription-feature-icon">📊</span>
+                    <div>
+                        <h4>Adherence Tracking</h4>
+                        <p>
+                            Track taken and missed doses
+                            through medication logs and reports.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="prescription-panel-note">
+                    <span>✦</span>
+                    <p>
+                        Consistent schedules help patients
+                        stay organized with their medication.
+                    </p>
+                </div>
+
+            </aside>
+
+            </div> <!-- End prescription-page-layout -->
+
+
+
+            <div class="prescription-list-header">
+                <h2>Prescription List</h2>
+
+                <div class="prescription-filter">
+                    <label for="patientPrescriptionFilter">
+                        Search by Patient
+                    </label>
+
+                    <select id="patientPrescriptionFilter"
+                            onchange="filterPrescriptions()">
+
+                        <option value="all">All Patients</option>
+
+                        {% for patient in patients %}
+                        <option value="{{ patient['patient_id'] }}">
+                            {{ patient['name'] }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+            </div>
+
 
 
             <div class="patient-list">
@@ -198,7 +345,10 @@
                     {% for prescription in prescriptions %}
 
 
-                    <div class="patient-card">
+                    
+                    <div class="patient-card prescription-card"
+                        data-patient-id="{{ prescription['patient_id'] }}">
+
 
                         <h3>
                             💊 {{ prescription["medicine_name"] }}
@@ -291,8 +441,152 @@
 
             </div>
 
+            <p id="prescriptionFilterEmpty" hidden>
+                No prescriptions found for the selected patient.
+            </p>
 
         </main>
+
+
+
+            <!-- Custom Scroll-Wheel Date Picker -->
+            <div id="datePickerOverlay" class="date-picker-overlay" hidden>
+
+                <div class="date-picker-modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="datePickerTitle">
+
+                    <div class="date-picker-heading">
+                        <h3 id="datePickerTitle">Select Date</h3>
+
+                        <button type="button"
+                                class="date-picker-close"
+                                onclick="closeDatePicker()"
+                                aria-label="Close date picker">
+                            &times;
+                        </button>
+                    </div>
+
+                    <div class="date-wheel-labels">
+                        <span>DAY</span>
+                        <span>MONTH</span>
+                        <span>YEAR</span>
+                    </div>
+
+                    <div class="date-wheel-container">
+
+                        <div class="date-wheel-selection"></div>
+
+                        <div id="dateDayWheel"
+                            class="date-wheel"
+                            aria-label="Select day">
+                        </div>
+
+                        <div id="dateMonthWheel"
+                            class="date-wheel"
+                            aria-label="Select month">
+                        </div>
+
+                        <div id="dateYearWheel"
+                            class="date-wheel"
+                            aria-label="Select year">
+                        </div>
+
+                    </div>
+
+                    <div class="date-picker-actions">
+
+                        <button type="button"
+                                class="date-picker-cancel"
+                                onclick="closeDatePicker()">
+                            Cancel
+                        </button>
+
+                        <button type="button"
+                                class="date-picker-confirm"
+                                onclick="confirmDatePicker()">
+                            Confirm Date
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+
+        <!-- Custom Analog Time Picker -->
+        <div id="clockPickerOverlay" class="clock-picker-overlay" hidden>
+
+            <div class="clock-picker-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="clockPickerTitle">
+
+                <h3 id="clockPickerTitle">Select time</h3>
+
+                <div class="clock-time-header">
+
+                    <button type="button"
+                            id="clockHourDisplay"
+                            class="clock-time-part active"
+                            onclick="switchClockMode('hour')">
+                        07
+                    </button>
+
+                    <span class="clock-colon">:</span>
+
+                    <button type="button"
+                            id="clockMinuteDisplay"
+                            class="clock-time-part"
+                            onclick="switchClockMode('minute')">
+                        00
+                    </button>
+
+                    <div class="clock-period">
+                        <button type="button"
+                                id="clockAM"
+                                onclick="setClockPeriod('AM')">
+                            AM
+                        </button>
+
+                        <button type="button"
+                                id="clockPM"
+                                onclick="setClockPeriod('PM')">
+                            PM
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="clock-face" id="clockFace">
+
+                    <div class="clock-hand" id="clockHand"></div>
+
+                    <div class="clock-center"></div>
+
+                </div>
+
+                <div class="clock-picker-actions">
+                    <button type="button"
+                            class="clock-cancel"
+                            onclick="closeClockPicker()">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            class="clock-confirm"
+                            onclick="confirmClockTime()">
+                        OK
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
 
 
 
@@ -380,23 +674,84 @@
                         <option value="every_8_hours">Every 8 Hours</option>
                     </select>
 
-                    <label>Start Date</label>
-                    <input type="date"
-                        name="start_date"
+                    
+                    <label for="editStartDateDisplay">Start Date</label>
+
+                    <div class="date-input-wrapper">
+                        <input
+                            type="text"
+                            id="editStartDateDisplay"
+                            class="date-display"
+                            placeholder="Select start date"
+                            readonly
+                            onclick="openDatePicker('editStartDate')"
+                        >
+
+                        <button type="button"
+                                class="date-trigger"
+                                onclick="openDatePicker('editStartDate')"
+                                aria-label="Choose start date">
+                            📅
+                        </button>
+                    </div>
+
+                    <input type="hidden"
                         id="editStartDate"
-                        required>
+                        name="start_date">
 
-                    <label>End Date</label>
-                    <input type="date"
-                        name="end_date"
+                    <label for="editEndDateDisplay">End Date</label>
+
+                    <div class="date-input-wrapper">
+                        <input
+                            type="text"
+                            id="editEndDateDisplay"
+                            class="date-display"
+                            placeholder="Select end date"
+                            readonly
+                            onclick="openDatePicker('editEndDate')"
+                        >
+
+                        <button type="button"
+                                class="date-trigger"
+                                onclick="openDatePicker('editEndDate')"
+                                aria-label="Choose end date">
+                            📅
+                        </button>
+                    </div>
+
+                    <input type="hidden"
                         id="editEndDate"
-                        required>
+                        name="end_date">
 
-                    <label>Start Time</label>
-                    <input type="time"
-                        name="start_time"
+
+                    
+                    <label for="editStartTimeDisplay">Start Time</label>
+
+                    <div class="clock-input-wrapper">
+                        <input
+                            type="text"
+                            id="editStartTimeDisplay"
+                            class="clock-display"
+                            placeholder="Select time"
+                            readonly
+                            onclick="openClockPicker('editStartTime')"
+                        >
+
+                        <button
+                            type="button"
+                            class="clock-trigger"
+                            onclick="openClockPicker('editStartTime')"
+                            aria-label="Choose starting time">
+                            ◷
+                        </button>
+                    </div>
+
+                    <input
+                        type="hidden"
                         id="editStartTime"
-                        required>
+                        name="start_time"
+                    >
+
 
                     <label>Reminder Before Dose</label>
                     <select name="reminder_minutes"
@@ -426,6 +781,244 @@
 
 
         <script>
+
+
+            function filterPrescriptions() {
+                const selectedPatient = document.getElementById(
+                    "patientPrescriptionFilter"
+                ).value;
+
+                const cards = document.querySelectorAll(
+                    ".prescription-card[data-patient-id]"
+                );
+
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    const matches =
+                        selectedPatient === "all" ||
+                        card.dataset.patientId === selectedPatient;
+
+                    card.style.display = matches ? "" : "none";
+
+                    if (matches) {
+                        visibleCount++;
+                    }
+                });
+
+                const emptyMessage = document.getElementById(
+                    "prescriptionFilterEmpty"
+                );
+
+                if (emptyMessage) {
+                    emptyMessage.hidden = visibleCount > 0;
+                }
+            }
+
+
+
+            /* ===== MEDTRACK ANALOG CLOCK LOGIC ===== */
+
+            let clockTarget = null;
+            let clockHour = 7;
+            let clockMinute = 0;
+            let clockPeriod = "AM";
+            let clockMode = "hour";
+
+            function formatClockNumber(value) {
+                return String(value).padStart(2, "0");
+            }
+
+            function openClockPicker(targetId) {
+                clockTarget = targetId;
+
+                const existingValue =
+                    document.getElementById(targetId).value;
+
+                if (/^\d{2}:\d{2}$/.test(existingValue)) {
+                    const [hours, minutes] =
+                        existingValue.split(":").map(Number);
+
+                    clockHour = hours % 12 || 12;
+                    clockMinute = minutes;
+                    clockPeriod = hours >= 12 ? "PM" : "AM";
+                } else {
+                    clockHour = 7;
+                    clockMinute = 0;
+                    clockPeriod = "AM";
+                }
+
+                clockMode = "hour";
+
+                document.getElementById(
+                    "clockPickerOverlay"
+                ).hidden = false;
+
+                renderClock();
+            }
+
+            function closeClockPicker() {
+                document.getElementById(
+                    "clockPickerOverlay"
+                ).hidden = true;
+
+                clockTarget = null;
+            }
+
+            function switchClockMode(mode) {
+                clockMode = mode;
+                renderClock();
+            }
+
+            function setClockPeriod(period) {
+                clockPeriod = period;
+                renderClock();
+            }
+
+            function selectClockValue(value) {
+                if (clockMode === "hour") {
+                    clockHour = value;
+                    clockMode = "minute";
+                } else {
+                    clockMinute = value;
+                }
+
+                renderClock();
+            }
+
+            function renderClock() {
+                document.getElementById(
+                    "clockHourDisplay"
+                ).textContent = formatClockNumber(clockHour);
+
+                document.getElementById(
+                    "clockMinuteDisplay"
+                ).textContent = formatClockNumber(clockMinute);
+
+                document.getElementById(
+                    "clockHourDisplay"
+                ).classList.toggle("active", clockMode === "hour");
+
+                document.getElementById(
+                    "clockMinuteDisplay"
+                ).classList.toggle("active", clockMode === "minute");
+
+                document.getElementById(
+                    "clockAM"
+                ).classList.toggle("active", clockPeriod === "AM");
+
+                document.getElementById(
+                    "clockPM"
+                ).classList.toggle("active", clockPeriod === "PM");
+
+                const face = document.getElementById("clockFace");
+
+                face.querySelectorAll(".clock-number").forEach(
+                    element => element.remove()
+                );
+
+                const values = clockMode === "hour"
+                    ? Array.from({length: 12}, (_, i) => i + 1)
+                    : Array.from({length: 12}, (_, i) => i * 5);
+
+                const selected = clockMode === "hour"
+                    ? clockHour
+                    : clockMinute;
+
+                const angle = clockMode === "hour"
+                    ? (clockHour % 12) * 30
+                    : clockMinute * 6;
+
+                document.getElementById("clockHand").style.transform =
+                    `translate(-50%, -100%) rotate(${angle}deg)`;
+
+                values.forEach((value, index) => {
+                    const button = document.createElement("button");
+
+                    button.type = "button";
+                    button.className = "clock-number";
+                    button.textContent = clockMode === "hour"
+                        ? value
+                        : formatClockNumber(value);
+
+                    const degrees = index * 30 - (clockMode === "hour" ? 60 : 90);
+                    const radians = degrees * Math.PI / 180;
+
+                    button.style.left =
+                        `${50 + 38 * Math.cos(radians)}%`;
+
+                    button.style.top =
+                        `${50 + 38 * Math.sin(radians)}%`;
+
+                    if (value === selected) {
+                        button.classList.add("selected");
+                    }
+
+                    button.addEventListener("click", () => {
+                        selectClockValue(value);
+                    });
+
+                    face.appendChild(button);
+                });
+            }
+
+            function confirmClockTime() {
+                if (!clockTarget) return;
+
+                let hours24 = clockHour % 12;
+
+                if (clockPeriod === "PM") {
+                    hours24 += 12;
+                }
+
+                const storedTime =
+                    `${formatClockNumber(hours24)}:${formatClockNumber(clockMinute)}`;
+
+                const displayTime =
+                    `${formatClockNumber(clockHour)}:${formatClockNumber(clockMinute)} ${clockPeriod}`;
+
+                document.getElementById(clockTarget).value =
+                    storedTime;
+
+                document.getElementById(
+                    clockTarget + "Display"
+                ).value = displayTime;
+
+                closeClockPicker();
+            }
+
+            /* Keep the Edit popup display synchronized */
+            function syncEditClockDisplay() {
+                const value =
+                    document.getElementById("editStartTime").value;
+
+                if (!/^\d{2}:\d{2}$/.test(value)) return;
+
+                const [hours, minutes] =
+                    value.split(":").map(Number);
+
+                const hour12 = hours % 12 || 12;
+                const period = hours >= 12 ? "PM" : "AM";
+
+                document.getElementById(
+                    "editStartTimeDisplay"
+                ).value =
+                    `${formatClockNumber(hour12)}:${formatClockNumber(minutes)} ${period}`;
+            }
+
+            /* Prevent submitting Add Prescription without a time */
+            document.querySelector(
+                'form[action="/prescriptions/add"]'
+            )?.addEventListener("submit", function(event) {
+                if (!document.getElementById("addStartTime").value) {
+                    event.preventDefault();
+                    alert("Please select a starting time.");
+                    openClockPicker("addStartTime");
+                }
+            });
+
+
+
             function openEditModal(button) {
 
                 const prescription = JSON.parse(
@@ -452,6 +1045,7 @@
 
                 document.getElementById("editStartTime").value =
                     prescription.start_time;
+                    syncEditClockDisplay();
 
                 document.getElementById("editReminderMinutes").value =
                     prescription.reminder_minutes;
@@ -517,6 +1111,375 @@
                 }, 4000);
             });
         </script>
+
+
+        <script>
+        /* =========================================
+        MEDTRACK - WHEEL DATE PICKER
+        ========================================= */
+
+        const datePickerState = {
+            fieldId: null,
+            day: 1,
+            month: 1,
+            year: new Date().getFullYear()
+        };
+
+        const dateWheelMonths = [
+            "January", "February", "March", "April",
+            "May", "June", "July", "August",
+            "September", "October", "November", "December"
+        ];
+
+        const DATE_ROW_HEIGHT = 50;
+        const DATE_WHEEL_PADDING = 100;
+
+        function datePickerDaysInMonth(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        function datePickerPad(number) {
+            return String(number).padStart(2, "0");
+        }
+
+        function datePickerFormat(year, month, day) {
+            return `${year}-${datePickerPad(month)}-${datePickerPad(day)}`;
+        }
+
+        function datePickerDisplay(isoDate) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return "";
+
+            const [year, month, day] = isoDate.split("-").map(Number);
+
+            return `${datePickerPad(day)} ${dateWheelMonths[month - 1]} ${year}`;
+        }
+
+        function datePickerGetValues(type) {
+            if (type === "month") {
+                return dateWheelMonths.map((name, index) => ({
+                    value: index + 1,
+                    label: name
+                }));
+            }
+
+            if (type === "year") {
+                const currentYear = new Date().getFullYear();
+                const years = [];
+
+                for (let year = currentYear - 10; year <= currentYear + 20; year++) {
+                    years.push({
+                        value: year,
+                        label: String(year)
+                    });
+                }
+
+                return years;
+            }
+
+            const totalDays = datePickerDaysInMonth(
+                datePickerState.year,
+                datePickerState.month
+            );
+
+            return Array.from({ length: totalDays }, (_, index) => ({
+                value: index + 1,
+                label: datePickerPad(index + 1)
+            }));
+        }
+
+        function datePickerRenderWheel(type) {
+            const wheel = document.getElementById(
+                `date${type.charAt(0).toUpperCase() + type.slice(1)}Wheel`
+            );
+
+            const values = datePickerGetValues(type);
+
+            wheel.innerHTML = "";
+
+            // Padding places first and last values in the center.
+            const topSpacer = document.createElement("div");
+            topSpacer.style.height = `${DATE_WHEEL_PADDING}px`;
+            topSpacer.setAttribute("aria-hidden", "true");
+            wheel.appendChild(topSpacer);
+
+            values.forEach(item => {
+                const element = document.createElement("div");
+
+                element.className = "date-wheel-item";
+                element.textContent = item.label;
+                element.dataset.value = item.value;
+
+                if (item.value === datePickerState[type]) {
+                    element.classList.add("selected");
+                }
+
+                element.addEventListener("click", () => {
+                    datePickerSelect(type, item.value);
+                });
+
+                wheel.appendChild(element);
+            });
+
+            const bottomSpacer = document.createElement("div");
+            bottomSpacer.style.height = `${DATE_WHEEL_PADDING}px`;
+            bottomSpacer.setAttribute("aria-hidden", "true");
+            wheel.appendChild(bottomSpacer);
+
+            datePickerScrollTo(type, datePickerState[type], false);
+        }
+
+        function datePickerScrollTo(type, value, smooth = true) {
+            const wheel = document.getElementById(
+                `date${type.charAt(0).toUpperCase() + type.slice(1)}Wheel`
+            );
+
+            const values = datePickerGetValues(type);
+            const index = values.findIndex(item => item.value === value);
+
+            if (index < 0) return;
+
+            wheel.scrollTo({
+                top: index * DATE_ROW_HEIGHT,
+                behavior: smooth ? "smooth" : "instant"
+            });
+        }
+
+        function datePickerUpdateSelected(type) {
+            const wheel = document.getElementById(
+                `date${type.charAt(0).toUpperCase() + type.slice(1)}Wheel`
+            );
+
+            wheel.querySelectorAll(".date-wheel-item").forEach(item => {
+                item.classList.toggle(
+                    "selected",
+                    Number(item.dataset.value) === datePickerState[type]
+                );
+            });
+        }
+
+        function datePickerSelect(type, value, smooth = true) {
+            datePickerState[type] = value;
+
+            if (type === "month" || type === "year") {
+                const maxDay = datePickerDaysInMonth(
+                    datePickerState.year,
+                    datePickerState.month
+                );
+
+                if (datePickerState.day > maxDay) {
+                    datePickerState.day = maxDay;
+                }
+
+                datePickerRenderWheel("day");
+            }
+
+            datePickerUpdateSelected(type);
+            datePickerScrollTo(type, value, smooth);
+        }
+
+        function datePickerHandleScroll(type) {
+            const wheel = document.getElementById(
+                `date${type.charAt(0).toUpperCase() + type.slice(1)}Wheel`
+            );
+
+            const values = datePickerGetValues(type);
+
+            if (!values.length) return;
+
+            const index = Math.max(
+                0,
+                Math.min(
+                    values.length - 1,
+                    Math.round(wheel.scrollTop / DATE_ROW_HEIGHT)
+                )
+            );
+
+            const value = values[index].value;
+
+            if (datePickerState[type] !== value) {
+                datePickerState[type] = value;
+
+                if (type === "month" || type === "year") {
+                    const maxDay = datePickerDaysInMonth(
+                        datePickerState.year,
+                        datePickerState.month
+                    );
+
+                    if (datePickerState.day > maxDay) {
+                        datePickerState.day = maxDay;
+                    }
+
+                    datePickerRenderWheel("day");
+                }
+            }
+
+            datePickerUpdateSelected(type);
+        }
+
+        function openDatePicker(fieldId) {
+            const input = document.getElementById(fieldId);
+            if (!input) return;
+
+            datePickerState.fieldId = fieldId;
+
+            const savedValue = input.value;
+            const today = new Date();
+
+            if (/^\d{4}-\d{2}-\d{2}$/.test(savedValue)) {
+                const [year, month, day] = savedValue.split("-").map(Number);
+
+                datePickerState.year = year;
+                datePickerState.month = month;
+                datePickerState.day = day;
+            } else {
+                datePickerState.year = today.getFullYear();
+                datePickerState.month = today.getMonth() + 1;
+                datePickerState.day = today.getDate();
+            }
+
+            document.getElementById("datePickerOverlay").hidden = false;
+
+            // Render after the popup becomes visible.
+            requestAnimationFrame(() => {
+                datePickerRenderWheel("day");
+                datePickerRenderWheel("month");
+                datePickerRenderWheel("year");
+            });
+        }
+
+        function closeDatePicker() {
+            document.getElementById("datePickerOverlay").hidden = true;
+            datePickerState.fieldId = null;
+        }
+
+        function confirmDatePicker() {
+            if (!datePickerState.fieldId) return;
+
+            const maxDay = datePickerDaysInMonth(
+                datePickerState.year,
+                datePickerState.month
+            );
+
+            const day = Math.min(datePickerState.day, maxDay);
+
+            const formattedDate = datePickerFormat(
+                datePickerState.year,
+                datePickerState.month,
+                day
+            );
+
+            const hiddenInput = document.getElementById(
+                datePickerState.fieldId
+            );
+
+            hiddenInput.value = formattedDate;
+
+            const displayInput = document.getElementById(
+                `${datePickerState.fieldId}Display`
+            );
+
+            if (displayInput) {
+                displayInput.value = datePickerDisplay(formattedDate);
+            }
+
+            closeDatePicker();
+        }
+
+        function datePickerSyncDisplays() {
+            ["addStartDate", "addEndDate", "editStartDate", "editEndDate"]
+                .forEach(fieldId => {
+                    const hiddenInput = document.getElementById(fieldId);
+                    const displayInput = document.getElementById(
+                        `${fieldId}Display`
+                    );
+
+                    if (hiddenInput && displayInput) {
+                        displayInput.value = datePickerDisplay(
+                            hiddenInput.value
+                        );
+                    }
+                });
+        }
+
+        // Set up scroll listeners.
+        ["day", "month", "year"].forEach(type => {
+            const wheel = document.getElementById(
+                `date${type.charAt(0).toUpperCase() + type.slice(1)}Wheel`
+            );
+
+            if (wheel) {
+                wheel.addEventListener("scroll", () => {
+                    datePickerHandleScroll(type);
+                }, { passive: true });
+            }
+        });
+
+        // Close on overlay click.
+        document.getElementById("datePickerOverlay")
+            .addEventListener("click", event => {
+                if (event.target.id === "datePickerOverlay") {
+                    closeDatePicker();
+                }
+            });
+
+        // Close with Escape.
+        document.addEventListener("keydown", event => {
+            if (
+                event.key === "Escape" &&
+                !document.getElementById("datePickerOverlay").hidden
+            ) {
+                closeDatePicker();
+            }
+        });
+
+        // Synchronize the visible dates when editing a prescription.
+        const originalOpenEditModal = window.openEditModal;
+
+        if (typeof originalOpenEditModal === "function") {
+            window.openEditModal = function(...args) {
+                originalOpenEditModal.apply(this, args);
+                datePickerSyncDisplays();
+            };
+        }
+
+        document.addEventListener("DOMContentLoaded", datePickerSyncDisplays);
+
+
+        function validatePrescriptionDates(form) {
+            const startInput = form.querySelector('[name="start_date"]');
+            const endInput = form.querySelector('[name="end_date"]');
+
+            if (!startInput || !endInput) return true;
+
+            if (!startInput.value || !endInput.value) {
+                alert("Please select both Start Date and End Date.");
+                return false;
+            }
+
+            if (endInput.value < startInput.value) {
+                alert("End Date cannot be earlier than Start Date.");
+                return false;
+            }
+
+            return true;
+        }
+
+        document.querySelectorAll("form").forEach(form => {
+            if (
+                form.querySelector('[name="start_date"]') &&
+                form.querySelector('[name="end_date"]')
+            ) {
+                form.addEventListener("submit", event => {
+                    if (!validatePrescriptionDates(form)) {
+                        event.preventDefault();
+                    }
+                });
+            }
+        });
+
+        </script>
+
+
 
 
 

@@ -8,7 +8,7 @@
         <meta name="viewport"
             content="width=device-width, initial-scale=1.0">
 
-        <title>Prescriptions - MedTrack</title>
+        <title>Prescriptions - MediNest</title>
 
         <link rel="stylesheet"
             href="{{ url_for('static', filename='css/style.css') }}">
@@ -20,7 +20,14 @@
 
         <header>
 
-            <h2>💊 MedTrack</h2>
+            <div class="logo">
+                <img
+                    src="{{ url_for('static', filename='images/medinest1.png') }}"
+                    alt="MediNest Logo"
+                    class="medinest-logo"
+                >
+                <h2>MediNest</h2>
+            </div>
 
             <nav>
 
@@ -247,7 +254,13 @@
             <!-- Right-side Medication Guide -->
             <aside class="prescription-info-panel">
 
-                <div class="prescription-panel-icon">💊</div>
+                <div class="prescription-panel-icon">
+                    <img
+                        src="{{ url_for('static', filename='images/medinest1.png') }}"
+                        alt="MediNest"
+                        class="medinest-panel-logo"
+                    >
+                </div>
 
                 <span class="prescription-panel-label">
                     MEDICATION MANAGEMENT
@@ -262,7 +275,7 @@
 
                 <div class="prescription-panel-divider"></div>
 
-                <h3>How MedTrack helps</h3>
+                <h3>How MediNest helps</h3>
 
                 <div class="prescription-feature">
                     <span class="prescription-feature-icon">📅</span>
@@ -817,7 +830,7 @@
 
 
 
-            /* ===== MEDTRACK ANALOG CLOCK LOGIC ===== */
+            /* ===== MediNest ANALOG CLOCK LOGIC ===== */
 
             let clockTarget = null;
             let clockHour = 7;
@@ -1115,7 +1128,7 @@
 
         <script>
         /* =========================================
-        MEDTRACK - WHEEL DATE PICKER
+        MediNest - WHEEL DATE PICKER
         ========================================= */
 
         const datePickerState = {

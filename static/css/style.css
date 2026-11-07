@@ -4412,3 +4412,112 @@ main {
 
 
 
+
+
+.medinest-logo {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* MediNest Logo */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.medinest-logo {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.logo h2 {
+    margin: 0;
+}
+
+/* MediNest Header Logo */
+
+header .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+header .medinest-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+}
+
+header .logo h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+}
+
+/* MediNest branding inside information panels */
+
+.patient-panel-icon,
+.prescription-panel-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.medinest-panel-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    display: block;
+}
+
+/* MediNest compact header branding */
+
+header .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+header .medinest-logo {
+    width: 46px;
+    height: 46px;
+    object-fit: cover;
+    object-position: center 28%;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: block;
+}
+
+header .logo h2 {
+    margin: 0;
+    font-size: 26px;
+    line-height: 1;
+    color: white;
+}
+
+/* Smaller screens */
+@media (max-width: 760px) {
+    header .medinest-logo {
+        width: 85px;
+        height: 75px;
+    }
+
+    header .logo h2 {
+        font-size: 28px;
+    }
+}

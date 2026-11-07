@@ -8,7 +8,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Patients - MedTrack</title>
+    <title>Patients - MediNest</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
@@ -19,7 +19,14 @@
 
 <header>
 
-    <h2>💊 MedTrack</h2>
+    <div class="logo">
+        <img
+            src="{{ url_for('static', filename='images/medinest1.png') }}"
+            alt="MediNest Logo"
+            class="medinest-logo"
+        >
+        <h2>MediNest</h2>
+    </div>
 
     <nav>
 
@@ -173,7 +180,7 @@
             </div>
 
             <div class="info-panel-footer">
-                💊 MedTrack — Care made simple.
+                💊 MediNest — Care made simple.
             </div>
 
         </aside>
